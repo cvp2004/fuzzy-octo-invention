@@ -1,0 +1,122 @@
+[project]
+name = "lsm-kv"
+version = "0.1.0"
+description = "Production-grade Log-Structured Merge Tree Key-Value Store library"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "cachetools>=5.0.0",
+    "mmh3>=4.0.0",
+    "msgpack>=1.0.0",
+    "prompt-toolkit>=3.0.52",
+    "structlog>=24.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+    "basedpyright>=1.38.2",
+    "mypy>=1.19.1",
+    "poethepoet>=0.42.1",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.15.6",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff — linter + formatter (replaces flake8, isort, pyupgrade, black)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"   # must be 3.12+ to parse PEP 695 `type` statement syntax
+line-length = 88            # black-compatible; minimises reformatting churn
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes (undefined names, unused imports)
+    "I",    # isort (import ordering)
+    "UP",   # pyupgrade (modernise syntax automatically)
+    "B",    # flake8-bugbear (likely bugs and design issues)
+    "SIM",  # flake8-simplify (redundant patterns)
+    "ANN",  # flake8-annotations (enforce type annotations on public API)
+]
+ignore = []  # ANN101/ANN102 (self/cls) were removed from ruff; nothing else to suppress
+
+# ---------------------------------------------------------------------------
+# Mypy — strict type checker
+# Must run under Python 3.12+ to parse PEP 695 `type` statement syntax.
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"  # 3.12 required to parse `type Key = bytes` (PEP 695)
+strict = true             # enables --disallow-any-generics, --no-implicit-optional, etc.
+
+[[tool.mypy.overrides]]
+module = "msgpack"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mmh3"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "cachetools"
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# Basedpyright — second-opinion type checker with faster LSP integration
+# ---------------------------------------------------------------------------
+[tool.basedpyright]
+pythonVersion = "3.12"         # keep in sync with mypy; avoids false PEP 695 errors
+typeCheckingMode = "strict"    # mirrors mypy strict; catches different edge cases
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+# ---------------------------------------------------------------------------
+# Bandit — security linter
+# ---------------------------------------------------------------------------
+[tool.bandit]
+skips = ["B101"]  # assert statements are valid invariant checks in a library
+
+# ---------------------------------------------------------------------------
+# Poe — pyproject.toml-native task runner  (uv run poe <task>)
+# ---------------------------------------------------------------------------
+[tool.poe.tasks.typecheck]
+help = "Run mypy strict type checking"
+cmd  = "mypy app/ --strict"
+
+[tool.poe.tasks.lint]
+help = "Run ruff linter"
+cmd  = "ruff check app/"
+
+[tool.poe.tasks.typecheck-pyright]
+help = "Run basedpyright type checking"
+cmd  = "basedpyright app/"
+
+[tool.poe.tasks.security]
+help = "Run bandit security scan"
+cmd  = "bandit -r app/ -q"
+
+[tool.poe.tasks.check]
+help     = "Run all checks (typecheck + lint + security)"
+sequence = ["typecheck", "typecheck-pyright", "lint", "security"]
+
+[tool.poe.tasks.run]
+help     = "Run all checks then start the app"
+sequence = ["check", { cmd = "python main.py" }]
+
+[tool.poe.tasks.logs]
+help = "Tail live log stream from the running engine"
+cmd  = "python -m app.tools.logstream"
+
+[tool.poe.tasks.start]
+help = "Start the engine REPL (skip checks)"
+cmd  = "python main.py"
+
+[tool.poe.tasks.test]
+help = "Run all tests"
+cmd  = "pytest tests/ -v"
