@@ -1,0 +1,1 @@
+"""Sparse index package."""

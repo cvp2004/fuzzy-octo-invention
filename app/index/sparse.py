@@ -1,0 +1,71 @@
+"""SparseIndex — maps first_key_of_block to block_offset.
+
+Loaded into memory at SSTableReader open time.  Used for binary
+search to find the block containing a given key.
+"""
+
+from __future__ import annotations
+
+import bisect
+
+from app.common.encoding import decode_index_entries, encode_index_entry
+from app.types import Key, Offset
+
+
+class SparseIndex:
+    """In-memory sparse index mapping block first-keys to offsets."""
+
+    def __init__(self) -> None:
+        self._keys: list[Key] = []
+        self._offsets: list[Offset] = []
+
+    def add(self, first_key: Key, block_offset: Offset) -> None:
+        """Append a new index entry (must be called in key order)."""
+        self._keys.append(first_key)
+        self._offsets.append(block_offset)
+
+    def floor_offset(self, key: Key) -> Offset | None:
+        """Return the offset of the block whose first_key <= *key*.
+
+        Uses bisect_right: finds rightmost entry with first_key <= key.
+        """
+        idx = bisect.bisect_right(self._keys, key) - 1
+        if idx < 0:
+            return None
+        return self._offsets[idx]
+
+    def ceil_offset(self, key: Key) -> Offset | None:
+        """Return the offset of the block whose first_key >= *key*.
+
+        Uses bisect_left: finds leftmost entry with first_key >= key.
+        """
+        idx = bisect.bisect_left(self._keys, key)
+        if idx >= len(self._keys):
+            return None
+        return self._offsets[idx]
+
+    def to_bytes(self) -> bytes:
+        """Serialize all index entries to bytes."""
+        parts: list[bytes] = []
+        for key, offset in zip(self._keys, self._offsets, strict=True):
+            parts.append(encode_index_entry(key, offset))
+        return b"".join(parts)
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> SparseIndex:
+        """Deserialize from *data*."""
+        obj = cls()
+        for key, offset in decode_index_entries(data):
+            obj._keys.append(key)
+            obj._offsets.append(offset)
+        return obj
+
+    def next_offset_after(self, offset: Offset) -> Offset | None:
+        """Return the first offset strictly greater than *offset*, or None."""
+        for o in self._offsets:
+            if o > offset:
+                return o
+        return None
+
+    def __len__(self) -> int:
+        return len(self._keys)
