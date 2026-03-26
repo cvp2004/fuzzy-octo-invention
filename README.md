@@ -71,7 +71,7 @@ Open `http://localhost:8081` — interactive dashboard with KV explorer, memtabl
 
 ## Architecture
 
-![Architecture Diagram](assets/architecture.png)
+![Architecture Diagram](assets/architecture.jpg)
 
 **Write path**: `put()` → seq generation → WAL fsync → skip list insert → conditional freeze → flush pipeline signal
 
