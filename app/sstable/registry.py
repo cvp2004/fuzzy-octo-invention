@@ -21,6 +21,7 @@ class SSTableRegistry:
     """Thread-safe registry of open SSTable readers with ref counting."""
 
     def __init__(self) -> None:
+        """Initialize an empty reader registry with no registered readers."""
         self._readers: dict[FileID, SSTableReader] = {}
         self._refcounts: dict[FileID, int] = {}
         self._marked: set[FileID] = set()

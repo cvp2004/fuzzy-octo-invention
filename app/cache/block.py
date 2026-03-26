@@ -35,6 +35,13 @@ class BlockCache:
         index_maxsize: int = 64,
         bloom_maxsize: int = 64,
     ) -> None:
+        """Initialize a three-tier LRU block cache.
+
+        Args:
+            data_maxsize: Maximum number of data block entries to cache.
+            index_maxsize: Maximum number of sparse index entries to cache.
+            bloom_maxsize: Maximum number of bloom filter entries to cache.
+        """
         self._data: LRUCache[tuple[FileID, Offset], bytes] = LRUCache(
             maxsize=data_maxsize,
         )

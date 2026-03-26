@@ -19,6 +19,9 @@ dependencies = [
 dev = [
     "bandit>=1.9.4",
     "basedpyright>=1.38.2",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings[python]>=1.0.3",
     "mypy>=1.19.1",
     "poethepoet>=0.42.1",
     "pytest>=8.0.0",
@@ -123,3 +126,18 @@ cmd  = "python main.py"
 [tool.poe.tasks.test]
 help = "Run all tests"
 cmd  = "pytest tests/ -v"
+
+[tool.poe.tasks.web]
+help     = "Build frontend and start the full web dashboard"
+sequence = [
+    { cmd = "npm --prefix frontend run build" },
+    { cmd = "uvicorn web.server:app --reload --port 8081" },
+]
+
+[tool.poe.tasks.docs]
+help = "Build documentation to site/ directory"
+cmd  = "mkdocs build --strict"
+
+[tool.poe.tasks.docs-serve]
+help = "Serve documentation locally with live reload"
+cmd  = "mkdocs serve --dev-addr 127.0.0.1:8080"

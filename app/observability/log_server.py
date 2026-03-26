@@ -30,6 +30,15 @@ class LogBroadcastServer:
     """TCP server that broadcasts log lines to all connected clients."""
 
     def __init__(self, host: str = "127.0.0.1", port: int = DEFAULT_LOG_PORT) -> None:
+        """Initialize the log broadcast server (does not start listening).
+
+        Call :meth:`start` to bind the socket and begin accepting clients.
+
+        Args:
+            host: Network interface to bind to.
+            port: TCP port number. Defaults to the ``LSM_LOG_PORT``
+                environment variable or ``9009``.
+        """
         self._host = host
         self._port = port
         self._clients: list[socket.socket] = []

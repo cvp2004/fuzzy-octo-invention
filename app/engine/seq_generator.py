@@ -24,6 +24,12 @@ class SeqGenerator:
     """
 
     def __init__(self, start: int = 0) -> None:
+        """Create a sequence generator starting at *start*.
+
+        Args:
+            start: The initial counter value. The first call to
+                :meth:`next` will return ``start + 1``.
+        """
         self._seq = start
         self._lock = threading.Lock()
         logger.info("SeqGenerator created", start=start)

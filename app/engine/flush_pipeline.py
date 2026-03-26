@@ -28,7 +28,16 @@ logger = get_logger(__name__)
 
 @dataclass
 class FlushSlot:
-    """Tracks one in-flight flush operation."""
+    """Tracks one in-flight flush operation.
+
+    Attributes:
+        snapshot: The immutable memtable being flushed.
+        file_id: Target SSTable file ID for this flush.
+        prev_committed: Event set when the previous slot's commit completes.
+        my_committed: Event set when this slot's commit completes.
+        batch_abort: Shared event — set if any slot in the batch fails.
+        position: Zero-based index of this slot within the batch.
+    """
 
     snapshot: ImmutableMemTable
     file_id: FileID
@@ -54,6 +63,16 @@ class FlushPipeline:
         max_workers: int = 2,
         compaction: CompactionManager | None = None,
     ) -> None:
+        """Wire up the flush pipeline to its dependent managers.
+
+        Args:
+            mem: Memtable manager supplying immutable snapshots to flush.
+            sst: SSTable manager for writing and committing SSTables.
+            wal: WAL manager for truncating entries after successful flush.
+            max_workers: Maximum number of concurrent SSTable writes.
+            compaction: Optional compaction manager to trigger after each
+                flush commit.
+        """
         self._mem = mem
         self._sst = sst
         self._wal = wal

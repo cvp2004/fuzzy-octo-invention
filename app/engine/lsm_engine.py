@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.cache.block import BlockCache
+from app.common.abc import StorageEngine
 from app.common.errors import EngineClosed
 from app.engine.compaction_manager import CompactionManager
 from app.engine.config import LSMConfig
@@ -37,7 +38,19 @@ logger = get_logger(__name__)
 
 @dataclass(frozen=True)
 class EngineStats:
-    """Snapshot of engine statistics."""
+    """Snapshot of engine statistics.
+
+    Attributes:
+        key_count: Number of keys in the active memtable.
+        seq: Current sequence number (highest generated so far).
+        wal_entry_count: Number of entries in the write-ahead log.
+        data_root: Filesystem path to the engine's data directory.
+        active_table_id: UUID hex of the current active memtable.
+        active_size_bytes: Estimated byte size of the active memtable.
+        immutable_queue_len: Number of frozen snapshots awaiting flush.
+        immutable_snapshots: Snapshot IDs of queued immutable memtables.
+        l0_sstable_count: Number of Level-0 SSTables on disk.
+    """
 
     key_count: int
     seq: SeqNum
@@ -55,7 +68,7 @@ class EngineStats:
 # ---------------------------------------------------------------------------
 
 
-class LSMEngine:
+class LSMEngine(StorageEngine):
     """Central entry point for the lsm-kv key-value store.
 
     Use the :meth:`open` classmethod to create an instance — never

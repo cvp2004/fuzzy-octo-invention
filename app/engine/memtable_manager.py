@@ -36,6 +36,14 @@ class MemTableManager:
     """
 
     def __init__(self, config: LSMConfig) -> None:
+        """Initialize the memtable manager with an empty active table.
+
+        Args:
+            config: Live engine configuration. Thresholds (memtable size,
+                queue length, backpressure timeout) are read from *config*
+                at the point of use so runtime changes take effect
+                immediately.
+        """
         self._config = config
         self._active = ActiveMemTable()
         self._immutable_q: deque[ImmutableMemTable] = deque()

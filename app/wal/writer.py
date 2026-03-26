@@ -51,6 +51,13 @@ class WALEntry:
 
     Fields are ordered to match the msgpack encoding:
     ``packb((seq, timestamp_ms, op, key, value), use_bin_type=True)``
+
+    Attributes:
+        seq: Monotonically increasing sequence number.
+        timestamp_ms: Wall-clock timestamp in milliseconds since epoch.
+        op: Operation type (``PUT`` or ``DELETE``).
+        key: The raw byte key.
+        value: The raw byte value (or ``TOMBSTONE`` for deletions).
     """
 
     seq: SeqNum
@@ -78,6 +85,16 @@ class WALWriter:
     """
 
     def __init__(self, path: Path) -> None:
+        """Open or create a WAL file at *path* in append mode.
+
+        Parent directories are created automatically if they do not exist.
+
+        Args:
+            path: Filesystem path for the WAL file (e.g. ``data/wal.log``).
+
+        Raises:
+            OSError: If the file cannot be opened or created.
+        """
         self._path = path
         try:
             path.parent.mkdir(parents=True, exist_ok=True)

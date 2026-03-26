@@ -39,6 +39,14 @@ class CompactionManager:
         config: LSMConfig,
         data_root: Path,
     ) -> None:
+        """Initialize the compaction manager.
+
+        Args:
+            sst: SSTable manager providing level state and commit API.
+            config: Live engine configuration for thresholds and modes.
+            data_root: Root data directory, used for compaction log and
+                output SSTable paths.
+        """
         self._sst = sst
         self._config = config
         self._data_root = data_root
@@ -83,7 +91,12 @@ class CompactionManager:
     # ── job lifecycle ──────────────────────────────────────────────────
 
     async def _run_job(self, src: Level, dst: Level) -> None:
-        """Run one compaction job from src to dst level."""
+        """Run one compaction job, then release reservations and re-check.
+
+        Args:
+            src: Source level to compact from.
+            dst: Destination level to compact into.
+        """
         try:
             await self._run_one_compaction(src, dst)
         except Exception:
@@ -102,6 +115,12 @@ class CompactionManager:
     async def _run_one_compaction(
         self, src: Level, dst: Level,
     ) -> None:
+        """Execute a single compaction pass: build task, merge in subprocess, commit.
+
+        Args:
+            src: Source level to compact from.
+            dst: Destination level to compact into.
+        """
         logger.debug("Building compaction task", src=src, dst=dst)
         task = self._build_task(src, dst)
         if task is None:
@@ -254,7 +273,16 @@ class CompactionManager:
     def _build_task(
         self, src: Level, dst: Level,
     ) -> CompactionTask | None:
-        """Snapshot current input files via SSTableManager."""
+        """Assemble a ``CompactionTask`` from the current level state.
+
+        Args:
+            src: Source level whose files will be merged.
+            dst: Destination level for the merged output.
+
+        Returns:
+            A fully populated ``CompactionTask``, or ``None`` if the
+            source level has no files to compact.
+        """
         snap = self._sst.compaction_snapshot()
         l0_order: list[str] = snap["l0_order"]  # type: ignore[assignment]
         l0_dirs: dict[str, str] = snap["l0_dirs"]  # type: ignore[assignment]
@@ -307,10 +335,20 @@ class CompactionManager:
             output_dir=str(output_dir),
             output_level=dst,
             seq_cutoff=seq_cutoff,
+            bloom_fpr=self._config.bloom_fpr,
         )
 
     @staticmethod
     def _run_in_subprocess(task: CompactionTask) -> SSTableMeta:
+        """Offload compaction merge to a subprocess via ``ProcessPoolExecutor``.
+
+        Args:
+            task: The compaction task describing input files and output
+                destination.
+
+        Returns:
+            Metadata of the newly created SSTable.
+        """
         with ProcessPoolExecutor(max_workers=1) as pool:
             return pool.submit(run_compaction, task).result()
 

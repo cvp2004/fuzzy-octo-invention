@@ -148,10 +148,22 @@ class _BroadcastHandler(logging.Handler):
     """Logging handler that forwards formatted records to the TCP server."""
 
     def __init__(self, server: LogBroadcastServer) -> None:
+        """Create a handler that broadcasts to TCP clients.
+
+        Args:
+            server: The ``LogBroadcastServer`` instance to send
+                formatted log records through.
+        """
         super().__init__()
         self._server = server
 
     def emit(self, record: logging.LogRecord) -> None:
+        """Format and broadcast *record* to all connected TCP clients.
+
+        Args:
+            record: The stdlib ``LogRecord`` to send. Formatting is
+                applied by the handler's formatter before broadcast.
+        """
         try:
             msg = self.format(record)
             self._server.broadcast((msg + "\n").encode())

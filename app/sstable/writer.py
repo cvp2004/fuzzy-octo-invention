@@ -50,6 +50,27 @@ class SSTableWriter:
         bloom_n: int = 1_000_000,
         bloom_fpr: float = 0.01,
     ) -> None:
+        """Initialize an SSTable writer and open the data file for writing.
+
+        The output directory is created if it does not exist.
+
+        Args:
+            directory: Target directory for the SSTable files.
+            file_id: Unique identifier for this SSTable.
+            snapshot_id: ID of the memtable snapshot being flushed.
+            level: Compaction level (0 for flush, 1+ for compaction output).
+            block_size: Target data block size in bytes. Used when
+                ``block_entries`` is 0.
+            block_entries: If non-zero, flush a block after this many
+                records instead of using byte-size threshold.
+            bloom_n: Expected element count for the bloom filter. The
+                flush path passes ``len(snapshot)`` (exact count) and the
+                compaction path passes the total input record count.
+            bloom_fpr: Target false positive rate for the bloom filter.
+                Read from ``config.bloom_fpr`` which selects between
+                ``bloom_fpr_dev`` (0.05) and ``bloom_fpr_prod`` (0.01)
+                based on the current environment.
+        """
         self._dir = directory
         self._file_id = file_id
         self._snapshot_id = snapshot_id

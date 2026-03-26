@@ -42,6 +42,8 @@ _DEFAULTS: dict[str, int | float | str] = {
     "flush_max_workers": 2,
     "compaction_max_workers": 1,
     "max_levels": 3,
+    "bloom_fpr_dev": 0.05,
+    "bloom_fpr_prod": 0.01,
     "cache_data_entry_limit": 256,
     "cache_index_entry_limit": 64,
     "cache_bloom_entry_limit": 64,
@@ -62,14 +64,37 @@ class LSMConfig:
 
         config.max_memtable_size_mb   # → 64
         config.max_memtable_bytes     # → 67108864 (convenience)
+        config.bloom_fpr              # → 0.05 (dev) or 0.01 (prod)
 
     Update at runtime::
 
         config.set("max_memtable_entries", 500_000)
+        config.set("bloom_fpr_prod", 0.001)
         # writes to disk synchronously, all further reads see new value
+
+    Bloom filter configuration:
+
+    - ``bloom_fpr_dev`` — false positive rate in dev mode (default 0.05).
+      Higher FPR means smaller filters and faster builds.
+    - ``bloom_fpr_prod`` — false positive rate in prod mode (default 0.01).
+      Lower FPR means fewer false disk reads at the cost of larger filters.
+    - The convenience property :attr:`bloom_fpr` auto-selects based on ``env``.
+    - The expected item count (``bloom_n``) is not configurable — it is
+      derived from the actual data size at flush time (``len(snapshot)``)
+      and compaction time (sum of input record counts).
     """
 
     def __init__(self, path: Path) -> None:
+        """Load or create engine configuration from *path*.
+
+        If the file exists, its contents are merged with built-in defaults
+        so that new keys introduced in code upgrades are always present.
+        If the file does not exist or is corrupt, defaults are used and
+        persisted to disk.
+
+        Args:
+            path: Filesystem path to ``config.json``.
+        """
         self._path = path
         self._lock = threading.RLock()
         self._data: dict[str, int | float | str] = {}
@@ -170,6 +195,17 @@ class LSMConfig:
         """Convenience: max_memtable_size_mb converted to bytes."""
         with self._lock:
             return int(self._data["max_memtable_size_mb"]) * 1024 * 1024
+
+    @property
+    def bloom_fpr(self) -> float:
+        """False positive rate for bloom filters, based on current env.
+
+        Dev mode uses a higher FPR (smaller filters, faster builds).
+        Prod mode uses a lower FPR (fewer false positives, larger filters).
+        """
+        with self._lock:
+            key = "bloom_fpr_dev" if self._data["env"] == "dev" else "bloom_fpr_prod"
+            return float(self._data[key])
 
     # ── update ────────────────────────────────────────────────────────────
 

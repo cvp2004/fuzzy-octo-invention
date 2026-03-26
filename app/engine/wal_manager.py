@@ -24,6 +24,11 @@ class WALManager:
     """Thread-safe, async-aware wrapper around :class:`WALWriter`."""
 
     def __init__(self, wal: WALWriter) -> None:
+        """Wrap an existing ``WALWriter`` with thread-safe locking.
+
+        Args:
+            wal: The underlying synchronous WAL writer to manage.
+        """
         self._wal = wal
         self._wal_lock = threading.Lock()
 
@@ -60,6 +65,14 @@ class WALManager:
         await asyncio.to_thread(self._sync_append, entry)
 
     def _sync_append(self, entry: WALEntry) -> None:
+        """Append *entry* to the WAL under the WAL lock.
+
+        Called from ``asyncio.to_thread`` by :meth:`append` or directly
+        by :meth:`sync_append`.
+
+        Args:
+            entry: The WAL entry to write and fsync.
+        """
         with self._wal_lock:
             self._wal.append(entry)
 
@@ -79,6 +92,12 @@ class WALManager:
         await asyncio.to_thread(self._sync_truncate, seq)
 
     def _sync_truncate(self, seq: SeqNum) -> None:
+        """Remove WAL entries with ``seq <= seq`` under the WAL lock.
+
+        Args:
+            seq: Sequence number cutoff. All entries at or below this
+                value are removed.
+        """
         with self._wal_lock:
             self._wal.truncate_before(seq)
 
@@ -89,6 +108,7 @@ class WALManager:
         await asyncio.to_thread(self._sync_close)
 
     def _sync_close(self) -> None:
+        """Fsync and close the underlying WAL file handle under lock."""
         with self._wal_lock:
             logger.info(
                 "WALManager closing", path=str(self._wal.path),

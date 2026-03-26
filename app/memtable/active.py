@@ -12,6 +12,7 @@ import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
 
+from app.common.abc import MemTable
 from app.common.errors import SnapshotEmptyError
 from app.memtable.skiplist import SkipList
 from app.observability import get_logger
@@ -27,12 +28,21 @@ logger = get_logger(__name__)
 
 @dataclass(frozen=True)
 class ActiveMemTableMeta:
-    """Point-in-time metadata snapshot for an active memtable."""
+    """Point-in-time metadata snapshot for an active memtable.
+
+    Attributes:
+        table_id: UUID hex identifying this memtable instance.
+        size_bytes: Estimated data size in bytes (sum of key + value lengths).
+        entry_count: Total number of put/delete operations applied.
+        created_at: Creation timestamp in nanoseconds since epoch.
+        seq_first: Sequence number of the first write to this table.
+        seq_last: Sequence number of the most recent write.
+    """
 
     table_id: TableID
     size_bytes: int
     entry_count: int
-    created_at: int           # nanoseconds since epoch (time.time_ns())
+    created_at: int
     seq_first: SeqNum
     seq_last: SeqNum
 
@@ -42,7 +52,7 @@ class ActiveMemTableMeta:
 # ---------------------------------------------------------------------------
 
 
-class ActiveMemTable:
+class ActiveMemTable(MemTable):
     """Public interface to the live mutable memtable.
 
     Wraps a :class:`SkipList` and adds:
@@ -52,6 +62,11 @@ class ActiveMemTable:
     """
 
     def __init__(self) -> None:
+        """Create a new empty active memtable with a unique table ID.
+
+        Initializes the underlying skip list and sets up metadata tracking
+        for entry count and sequence number range.
+        """
         self.table_id: TableID = uuid.uuid4().hex
         self._skiplist = SkipList()
         self._created_at = time.time_ns()

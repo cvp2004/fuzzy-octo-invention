@@ -24,15 +24,32 @@ class OpType(enum.IntEnum):
 # Primitive type aliases (PEP 695, requires Python 3.12+)
 # ---------------------------------------------------------------------------
 
-type Key = bytes        # Raw byte key used in all read/write operations
-type Value = bytes      # Raw byte value stored alongside a key
-type SeqNum = int       # Monotonically increasing write sequence number
-type Offset = int       # Byte offset within a file (SSTable, WAL, etc.)
-type BlockSize = int    # Size of a data block in bytes
-type FileID = str       # UUID or hex string identifying an SSTable file
-type Level = int        # Compaction level (0 = freshest / most recent data)
-type SnapshotID = str   # UUID4 hex — identifies one ImmutableMemTable snapshot
-type TableID = str      # UUID4 hex — identifies one ActiveMemTable instance
+type Key = bytes
+"""Raw byte key used in all read/write operations."""
+
+type Value = bytes
+"""Raw byte value stored alongside a key."""
+
+type SeqNum = int
+"""Monotonically increasing write sequence number."""
+
+type Offset = int
+"""Byte offset within a file (SSTable, WAL, etc.)."""
+
+type BlockSize = int
+"""Size of a data block in bytes."""
+
+type FileID = str
+"""UUID or hex string identifying an SSTable file."""
+
+type Level = int
+"""Compaction level (0 = freshest / most recent data)."""
+
+type SnapshotID = str
+"""UUID4 hex identifying one ImmutableMemTable snapshot."""
+
+type TableID = str
+"""UUID4 hex identifying one ActiveMemTable instance."""
 
 # ---------------------------------------------------------------------------
 # Constants

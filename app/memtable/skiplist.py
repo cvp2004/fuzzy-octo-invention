@@ -55,6 +55,16 @@ class _Node:
         value: Value,
         level: int,
     ) -> None:
+        """Create a skip list node.
+
+        Args:
+            key: The lookup key for this entry.
+            seq: Monotonically increasing sequence number.
+            timestamp_ms: Wall-clock timestamp in milliseconds.
+            value: The stored value (or ``TOMBSTONE`` for deletions).
+            level: The randomly chosen height of this node, determining
+                the number of forward pointers (``level + 1``).
+        """
         self.key = key
         self.seq = seq
         self.timestamp_ms = timestamp_ms
@@ -79,6 +89,10 @@ class SkipList:
     """
 
     def __init__(self) -> None:
+        """Initialize an empty skip list with a sentinel head node.
+
+        The head node spans all levels and is never visible to iterators.
+        """
         self._head = _Node(key=b"", seq=0, timestamp_ms=0, value=b"", level=MAX_LEVEL)
         self._head.fully_linked = True
         self._level = 0

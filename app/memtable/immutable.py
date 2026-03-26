@@ -24,14 +24,25 @@ logger = get_logger(__name__)
 
 @dataclass(frozen=True)
 class ImmutableMemTableMeta:
-    """Metadata for a frozen memtable snapshot."""
+    """Metadata for a frozen memtable snapshot.
+
+    Attributes:
+        snapshot_id: UUID hex identifying this snapshot.
+        source_table_id: Table ID of the active memtable that was frozen.
+        size_bytes: Total key + value bytes in this snapshot.
+        entry_count: Number of entries (including tombstones).
+        tombstone_count: Number of deletion tombstones.
+        frozen_at: Freeze timestamp in nanoseconds since epoch.
+        seq_min: Smallest sequence number in this snapshot.
+        seq_max: Largest sequence number in this snapshot.
+    """
 
     snapshot_id: SnapshotID
     source_table_id: TableID
     size_bytes: int
     entry_count: int
     tombstone_count: int
-    frozen_at: int             # nanoseconds since epoch (time.time_ns())
+    frozen_at: int
     seq_min: SeqNum
     seq_max: SeqNum
 
@@ -55,6 +66,17 @@ class ImmutableMemTable:
         snapshot_id: SnapshotID,
         data: list[tuple[Key, SeqNum, int, Value]],
     ) -> None:
+        """Create a frozen, read-only memtable snapshot.
+
+        After construction, the instance is sealed and any attribute
+        assignment will raise ``ImmutableTableAccessError``.
+
+        Args:
+            snapshot_id: Unique identifier for this snapshot, typically the
+                ``table_id`` of the ``ActiveMemTable`` that was frozen.
+            data: Sorted list of ``(key, seq, timestamp_ms, value)`` tuples.
+                Must be in ascending key order.
+        """
         self.snapshot_id = snapshot_id
         self._data = data  # must be sorted by key ascending
         self._index: dict[Key, int] = {entry[0]: i for i, entry in enumerate(data)}
@@ -122,11 +144,27 @@ class ImmutableMemTable:
         )
 
     def __len__(self) -> int:
+        """Return the number of entries in this snapshot.
+
+        Returns:
+            Total entry count including tombstones.
+        """
         return len(self._data)
 
     # ── immutability guard ────────────────────────────────────────────────
 
     def __setattr__(self, name: str, value: object) -> None:
+        """Enforce immutability after construction.
+
+        Args:
+            name: Attribute name being set.
+            value: Value to assign.
+
+        Raises:
+            ImmutableTableAccessError: If the instance has been sealed
+                (construction complete) and the attribute is not the
+                internal ``_sealed`` flag.
+        """
         if self._sealed and name != "_sealed":
             raise ImmutableTableAccessError(
                 f"Cannot set '{name}' on ImmutableMemTable {self.snapshot_id}"

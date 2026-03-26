@@ -13,6 +13,7 @@ from typing import Final
 import mmh3
 
 from app.common import crc
+from app.common.abc import Serializable
 from app.common.errors import CorruptRecordError
 from app.types import Key
 
@@ -24,10 +25,26 @@ _HEADER_STRUCT: Final = struct.Struct(">IIII")
 _HEADER_SIZE: Final[int] = _HEADER_STRUCT.size  # 16
 
 
-class BloomFilter:
+class BloomFilter(Serializable):
     """Fixed-size Bloom filter backed by mmh3 hashes."""
 
     def __init__(self, n: int = 1_000_000, fpr: float = 0.01) -> None:
+        """Initialize a Bloom filter with optimal bit count and hash count.
+
+        The optimal bit count and hash count are derived from *n* and *fpr*
+        using the standard formulas. Callers should pass the actual or
+        expected number of items — the flush path uses ``len(snapshot)``
+        and the compaction path uses the sum of input record counts.
+
+        Args:
+            n: Expected number of elements to be inserted. Determines the
+                bit array size together with *fpr*. Clamped to 1 if
+                non-positive.
+            fpr: Desired false positive rate in the range ``(0, 1)``.
+                Controlled by ``bloom_fpr_dev`` / ``bloom_fpr_prod`` in
+                ``config.json`` (dev default: 0.05, prod default: 0.01).
+                Reset to 0.01 if out of range.
+        """
         if n <= 0:
             n = 1
         if fpr <= 0 or fpr >= 1:

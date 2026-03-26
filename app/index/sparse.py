@@ -9,15 +9,17 @@ from __future__ import annotations
 import bisect
 
 from app.common import crc
+from app.common.abc import Serializable
 from app.common.encoding import decode_index_entries, encode_index_entry
 from app.common.errors import CorruptRecordError
 from app.types import Key, Offset
 
 
-class SparseIndex:
+class SparseIndex(Serializable):
     """In-memory sparse index mapping block first-keys to offsets."""
 
     def __init__(self) -> None:
+        """Initialize an empty sparse index with no entries."""
         self._keys: list[Key] = []
         self._offsets: list[Offset] = []
 
@@ -91,4 +93,10 @@ class SparseIndex:
         return None
 
     def __len__(self) -> int:
+        """Return the number of index entries.
+
+        Returns:
+            The count of ``(first_key, block_offset)`` pairs stored in
+            this index.
+        """
         return len(self._keys)

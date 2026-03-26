@@ -16,7 +16,29 @@ from app.types import FileID, Key, Level, SeqNum, SnapshotID
 
 @dataclass(frozen=True)
 class SSTableMeta:
-    """Immutable metadata for one SSTable."""
+    """Immutable metadata for one SSTable.
+
+    Serialized to ``meta.json`` inside the SSTable directory. Its
+    presence on disk is the completeness signal — if missing, the
+    SSTable is considered incomplete and ignored on recovery.
+
+    Attributes:
+        file_id: Unique identifier (UUIDv7 hex) for this SSTable.
+        snapshot_id: ID of the memtable snapshot that produced this table.
+        level: Compaction level (0 for flush output, 1+ for compaction output).
+        size_bytes: Total size of ``data.bin`` in bytes.
+        record_count: Number of key-value records stored.
+        block_count: Number of data blocks in ``data.bin``.
+        min_key: Lexicographically smallest key in this table.
+        max_key: Lexicographically largest key in this table.
+        seq_min: Smallest sequence number across all records.
+        seq_max: Largest sequence number across all records.
+        bloom_fpr: Configured false positive rate of the bloom filter.
+        created_at: ISO-8601 timestamp of when this table was written.
+        data_file: Filename of the data file (always ``data.bin``).
+        index_file: Filename of the sparse index (always ``index.bin``).
+        filter_file: Filename of the bloom filter (always ``filter.bin``).
+    """
 
     file_id: FileID
     snapshot_id: SnapshotID

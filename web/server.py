@@ -8,8 +8,12 @@ from collections import deque
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.engine import LSMEngine
 from web.routers import kv, mem, disk, compaction, stats, config_routes, engine, terminal
@@ -91,3 +95,20 @@ app.include_router(terminal.router, prefix="/api/v1/terminal", tags=["terminal"]
 
 # WebSocket
 app.include_router(logs.router)
+
+# ---------------------------------------------------------------------------
+# Serve React SPA from frontend/dist (must be AFTER API routers)
+# ---------------------------------------------------------------------------
+
+_frontend_dir = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+if _frontend_dir.exists():
+    app.mount("/assets", StaticFiles(directory=_frontend_dir / "assets"), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def _serve_spa(full_path: str) -> FileResponse:
+        """Serve index.html for all non-API routes (React Router handles client-side routing)."""
+        file_path = _frontend_dir / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(_frontend_dir / "index.html")

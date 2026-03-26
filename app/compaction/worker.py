@@ -34,6 +34,13 @@ def run_compaction(task: CompactionTask) -> SSTableMeta:
     Called in a subprocess — no event loop, no registry, no cache.
     Opens its own file handles via ``_open_reader_sync()``.
     Uses ``finish_sync()`` because blocking is fine in a subprocess.
+
+    Args:
+        task: Immutable description of the compaction job, including
+            input file IDs, directories, output path, and GC cutoff.
+
+    Returns:
+        Metadata of the newly created merged SSTable.
     """
     t0 = time.monotonic()
     total_input_records = 0
@@ -80,6 +87,8 @@ def run_compaction(task: CompactionTask) -> SSTableMeta:
             file_id=task.output_file_id,
             snapshot_id=task.task_id,
             level=task.output_level,
+            bloom_n=max(1, total_input_records),
+            bloom_fpr=task.bloom_fpr,
         )
 
         records_written = 0
@@ -109,7 +118,20 @@ def run_compaction(task: CompactionTask) -> SSTableMeta:
 
 
 def _open_reader_sync(directory: Path, file_id: str) -> SSTableReader:
-    """Open an SSTableReader synchronously — no event loop required."""
+    """Open an SSTableReader synchronously — no event loop required.
+
+    Unlike :meth:`SSTableReader.open`, this eagerly loads the bloom
+    filter and sparse index (no lazy loading) and skips the block
+    cache since subprocess workers have no shared cache.
+
+    Args:
+        directory: Path to the SSTable directory containing ``meta.json``,
+            ``data.bin``, ``index.bin``, and ``filter.bin``.
+        file_id: Unique identifier for this SSTable.
+
+    Returns:
+        A fully initialized reader with bloom filter and index pre-loaded.
+    """
     meta = SSTableMeta.from_json(
         (directory / "meta.json").read_text(encoding="utf-8"),
     )

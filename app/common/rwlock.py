@@ -31,6 +31,12 @@ class AsyncRWLock:
     """Async readers-writer lock with writer preference."""
 
     def __init__(self, name: str = "") -> None:
+        """Initialize the readers-writer lock.
+
+        Args:
+            name: Optional human-readable name used in debug log messages
+                to identify which lock is being acquired or released.
+        """
         self._name = name
         self._condition = asyncio.Condition()
         self._readers = 0

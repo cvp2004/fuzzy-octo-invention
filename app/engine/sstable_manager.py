@@ -45,6 +45,13 @@ class Manifest:
     """Tracks SSTable ordering on disk via ``manifest.json``."""
 
     def __init__(self, path: Path) -> None:
+        """Create a manifest backed by *path*.
+
+        Parent directories are created if they do not exist.
+
+        Args:
+            path: Filesystem path to ``manifest.json``.
+        """
         self._path = path
         self._path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -125,6 +132,17 @@ class SSTableManager:
         manifest: Manifest,
         config: LSMConfig | None = None,
     ) -> None:
+        """Construct the SSTable manager (prefer the :meth:`load` factory).
+
+        Args:
+            data_root: Root data directory for the engine.
+            cache: Shared block cache for data blocks, indexes, and blooms.
+            registry: Ref-counted registry of open SSTable readers.
+            l0_order: L0 file IDs in newest-first order.
+            l0_dirs: Mapping from L0 file ID to its on-disk directory.
+            manifest: Persistent manifest for SSTable ordering.
+            config: Live engine configuration, or ``None`` for defaults.
+        """
         self._data_root = data_root
         self._cache = cache
         self._registry = registry
@@ -353,7 +371,11 @@ class SSTableManager:
         snapshot: ImmutableMemTable,
         file_id: FileID,
     ) -> tuple[SSTableMeta, SSTableReader]:
-        """Write *snapshot* to a new L0 SSTable, return (meta, reader)."""
+        """Write *snapshot* to a new L0 SSTable, return (meta, reader).
+
+        The bloom filter is sized to ``len(snapshot)`` (exact entry count)
+        with a false positive rate from ``config.bloom_fpr``.
+        """
         sst_dir = self._data_root / "sstable" / "L0" / file_id
 
         block_size = 0
@@ -365,6 +387,8 @@ class SSTableManager:
         else:
             block_size = int(self._config.block_size) if self._config else 4096
 
+        bloom_fpr = self._config.bloom_fpr if self._config else 0.01
+
         writer = SSTableWriter(
             directory=sst_dir,
             file_id=file_id,
@@ -372,6 +396,8 @@ class SSTableManager:
             level=0,
             block_size=block_size,
             block_entries=block_entries,
+            bloom_n=max(1, len(snapshot)),
+            bloom_fpr=bloom_fpr,
         )
 
         for key, seq, ts, value in snapshot.items():

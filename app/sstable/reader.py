@@ -49,6 +49,18 @@ class SSTableReader:
         mm: mmap.mmap | None,
         fd: int,
     ) -> None:
+        """Construct an SSTableReader (prefer the :meth:`open` factory).
+
+        Args:
+            directory: Path to the SSTable directory on disk.
+            file_id: Unique identifier for this SSTable.
+            meta: Parsed metadata from ``meta.json``.
+            index: Pre-loaded sparse index, or ``None`` for lazy loading.
+            bloom: Pre-loaded bloom filter, or ``None`` for lazy loading.
+            cache: Shared block cache for cross-reader reuse, or ``None``.
+            mm: Memory-mapped ``data.bin`` file, or ``None`` if empty.
+            fd: Raw file descriptor for the mmap (kept open until close).
+        """
         self._dir = directory
         self._file_id = file_id
         self._meta = meta
@@ -106,11 +118,26 @@ class SSTableReader:
         )
 
     def _cache_get(self, offset: int) -> bytes | None:
+        """Look up a cached block by offset.
+
+        Args:
+            offset: The block offset (or sentinel offset for bloom/index).
+
+        Returns:
+            The cached bytes, or ``None`` on a cache miss or if no cache
+            is configured.
+        """
         if self._cache is not None:
             return self._cache.get(self._file_id, offset)
         return None
 
     def _cache_put(self, offset: int, data: bytes) -> None:
+        """Store a block in the cache.
+
+        Args:
+            offset: The block offset (or sentinel offset for bloom/index).
+            data: Raw bytes to cache.
+        """
         if self._cache is not None:
             self._cache.put(self._file_id, offset, data)
 
