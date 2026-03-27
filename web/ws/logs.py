@@ -43,7 +43,7 @@ async def log_websocket(ws: WebSocket) -> None:
                 if filter_text and filter_text.lower() not in decoded.lower():
                     continue
                 await ws.send_text(decoded)
-        except (ConnectionError, asyncio.CancelledError):
+        except (ConnectionError, asyncio.CancelledError, RuntimeError):
             pass
 
     async def read_client() -> None:

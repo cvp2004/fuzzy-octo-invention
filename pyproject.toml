@@ -86,7 +86,7 @@ asyncio_default_fixture_loop_scope = "function"
 # Bandit — security linter
 # ---------------------------------------------------------------------------
 [tool.bandit]
-skips = ["B101"]  # assert statements are valid invariant checks in a library
+skips = ["B101", "B311"]  # B101: asserts are valid invariant checks; B311: random used for skip list level (not crypto)
 
 # ---------------------------------------------------------------------------
 # Poe — pyproject.toml-native task runner  (uv run poe <task>)
@@ -105,7 +105,7 @@ cmd  = "basedpyright app/"
 
 [tool.poe.tasks.security]
 help = "Run bandit security scan"
-cmd  = "bandit -r app/ -q"
+cmd  = "bandit -r app/ -q -c pyproject.toml"
 
 [tool.poe.tasks.check]
 help     = "Run all checks (typecheck + lint + security)"

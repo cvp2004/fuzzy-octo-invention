@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useStats, useStatsHistory } from '../hooks/useStats';
 import { useDisk } from '../hooks/useDisk';
 import { useLogs } from '../hooks/useLogs';
-import { getWriteAmp } from '../api/client';
+
 import StatCard from '../components/StatCard';
 import LevelDiagram from '../components/LevelDiagram';
 import LogLine from '../components/LogLine';
@@ -22,12 +22,6 @@ export default function Dashboard() {
   const { data: diskData } = useDisk();
   const { data: memData } = useMem();
   const { logs } = useLogs(10);
-  const { data: wa } = useQuery({
-    queryKey: ['write-amp'],
-    queryFn: getWriteAmp,
-    refetchInterval: 2000,
-  });
-
   const active = memData?.active;
   const immutableQ = memData?.immutable || [];
   const threshold = 10; // default dev threshold
@@ -61,8 +55,8 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Middle row: 4 panels */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Middle row: 3 panels */}
+      <div className="grid grid-cols-3 gap-4">
         {/* MemTable panel */}
         <div className="bg-navy-800 border border-navy-600 rounded-lg p-4">
           <div className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-3">
@@ -106,75 +100,6 @@ export default function Dashboard() {
             diskData={diskData}
             compactionActive={stats?.compaction_active}
           />
-        </div>
-
-        {/* Write Amplification */}
-        <div className="bg-navy-800 border border-navy-600 rounded-lg p-4">
-          <div className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-3">
-            Write Amplification
-          </div>
-          {wa && wa.user_bytes_written > 0 ? (
-            <>
-              {/* Big ratio number */}
-              <div className={`text-3xl font-mono font-bold mb-3 ${
-                wa.write_amplification <= 2 ? 'text-accent-green' :
-                wa.write_amplification <= 5 ? 'text-accent-amber' :
-                'text-accent-red'
-              }`}>
-                {wa.write_amplification}x
-              </div>
-
-              {/* Bar: user vs disk */}
-              <div className="space-y-1.5 mb-3">
-                <div>
-                  <div className="flex justify-between text-[10px] font-mono text-gray-500 mb-0.5">
-                    <span>User written</span>
-                    <span>{formatBytes(wa.user_bytes_written)}</span>
-                  </div>
-                  <div className="w-full bg-navy-700 rounded-full h-2">
-                    <div
-                      className="bg-accent-green h-2 rounded-full transition-all"
-                      style={{
-                        width: `${Math.min(100, wa.disk_bytes_total > 0
-                          ? (wa.user_bytes_written / wa.disk_bytes_total) * 100
-                          : 100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-[10px] font-mono text-gray-500 mb-0.5">
-                    <span>Disk written</span>
-                    <span>{formatBytes(wa.disk_bytes_total)}</span>
-                  </div>
-                  <div className="w-full bg-navy-700 rounded-full h-2">
-                    <div className="bg-accent-amber h-2 rounded-full" style={{ width: '100%' }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Breakdown */}
-              <div className="space-y-0.5 text-[10px] font-mono text-gray-600">
-                <div className="flex justify-between">
-                  <span>SSTables</span>
-                  <span>{formatBytes(wa.disk_bytes_current_sstables)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Compaction rewrites</span>
-                  <span>{formatBytes(wa.disk_bytes_compaction_historical)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>WAL</span>
-                  <span>{formatBytes(wa.disk_bytes_wal)}</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="text-xs text-gray-600 font-mono h-20 flex items-center justify-center">
-              {wa ? 'Write some keys to see WA' : 'Loading...'}
-            </div>
-          )}
         </div>
 
         {/* Throughput chart */}
