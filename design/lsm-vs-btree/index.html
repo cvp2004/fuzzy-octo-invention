@@ -1,0 +1,2132 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Production-grade Log-Structured Merge Tree Key-Value Store">
+      
+      
+      
+      
+        <link rel="prev" href="../../internals/observability/">
+      
+      
+        <link rel="next" href="../comparison-leveldb-rocksdb/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>LSM Trees vs B+ Trees - lsm-kv Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/mermaid-zoom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lsm-trees-vs-b-trees" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="lsm-kv Documentation" class="md-header__button md-logo" aria-label="lsm-kv Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            lsm-kv Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              LSM Trees vs B+ Trees
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/your-org/lsm-kv" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="lsm-kv Documentation" class="md-nav__button md-logo" aria-label="lsm-kv Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    lsm-kv Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/your-org/lsm-kv" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types & Constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/abc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts (ABCs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/memtable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MemTable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/wal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WAL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/sstable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSTable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/bloom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bloom Filter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Block Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sparse Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/compaction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compaction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/flush/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flush Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Docs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Design Docs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LSM Trees vs B+ Trees
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LSM Trees vs B+ Trees
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-b-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is a B+ Tree?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What is a B+ Tree?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-a-b-tree-write-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How a B+ Tree write works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-a-b-tree-read-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How a B+ Tree read works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-an-lsm-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is an LSM Tree?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What is an LSM Tree?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-an-lsm-tree-write-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How an LSM Tree write works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-an-lsm-tree-read-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How an LSM Tree read works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#side-by-side-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Side-by-Side Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-rum-conjecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The RUM Conjecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-lsm-for-write-heavy-workloads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why LSM for Write-Heavy Workloads
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why LSM for Write-Heavy Workloads">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-sequential-io-is-10100-cheaper-than-random-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Sequential I/O is 10–100× cheaper than random I/O
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-write-path-has-no-disk-contention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Write path has no disk contention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-writes-never-block-on-compaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Writes never block on compaction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-write-amplification-is-deferred-and-amortized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Write amplification is deferred and amortized
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-b-trees-win-for-read-heavy-workloads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why B+ Trees Win for Read-Heavy Workloads
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why B+ Trees Win for Read-Heavy Workloads">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-single-traversal-predictable-latency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Single traversal, predictable latency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-no-bloom-filter-false-positives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. No bloom filter false positives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-range-scans-are-a-linked-list-traversal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Range scans are a linked-list traversal
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-lsm-kv-sits-on-the-spectrum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where lsm-kv Sits on the Spectrum
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../comparison-leveldb-rocksdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vs LevelDB & RocksDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../write-optimizations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Write Optimizations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../read-write-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Read & Write Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memtable-impl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MemTable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memtable-manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MemTable Manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sstable-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSTable Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sstable-manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSTable Manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../common-components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../async-io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async I/O Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flush-pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flush Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-flush/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel Flush
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compaction-spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compaction Spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compaction-manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compaction Manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-b-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is a B+ Tree?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What is a B+ Tree?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-a-b-tree-write-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How a B+ Tree write works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-a-b-tree-read-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How a B+ Tree read works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-an-lsm-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is an LSM Tree?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What is an LSM Tree?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-an-lsm-tree-write-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How an LSM Tree write works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-an-lsm-tree-read-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How an LSM Tree read works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#side-by-side-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Side-by-Side Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-rum-conjecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The RUM Conjecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-lsm-for-write-heavy-workloads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why LSM for Write-Heavy Workloads
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why LSM for Write-Heavy Workloads">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-sequential-io-is-10100-cheaper-than-random-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Sequential I/O is 10–100× cheaper than random I/O
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-write-path-has-no-disk-contention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Write path has no disk contention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-writes-never-block-on-compaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Writes never block on compaction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-write-amplification-is-deferred-and-amortized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Write amplification is deferred and amortized
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-b-trees-win-for-read-heavy-workloads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why B+ Trees Win for Read-Heavy Workloads
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why B+ Trees Win for Read-Heavy Workloads">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-single-traversal-predictable-latency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Single traversal, predictable latency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-no-bloom-filter-false-positives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. No bloom filter false positives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-range-scans-are-a-linked-list-traversal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Range scans are a linked-list traversal
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-lsm-kv-sits-on-the-spectrum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where lsm-kv Sits on the Spectrum
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="lsm-trees-vs-b-trees">LSM Trees vs B+ Trees<a class="headerlink" href="#lsm-trees-vs-b-trees" title="Permanent link">&para;</a></h1>
+<p>This document explains what a Log-Structured Merge Tree (LSM Tree) is, how it compares to the traditional B+ Tree used in most relational databases, and why lsm-kv chose an LSM architecture.</p>
+<hr />
+<h2 id="what-is-a-b-tree">What is a B+ Tree?<a class="headerlink" href="#what-is-a-b-tree" title="Permanent link">&para;</a></h2>
+<p>A B+ Tree is a balanced, disk-oriented tree structure where:</p>
+<ul>
+<li>All data lives in <strong>leaf nodes</strong> (sorted by key)</li>
+<li>Internal nodes store only keys and child pointers for navigation</li>
+<li>Every insert, update, or delete <strong>modifies the tree in place</strong> — finding the correct leaf, updating it, and potentially splitting or merging nodes to maintain balance</li>
+</ul>
+<p>B+ Trees are the foundation of most relational databases (PostgreSQL, MySQL/InnoDB, SQLite) and are optimized for <strong>read-heavy workloads</strong> where data is queried far more often than it is written.</p>
+<h3 id="how-a-b-tree-write-works">How a B+ Tree write works<a class="headerlink" href="#how-a-b-tree-write-works" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>1. Traverse tree from root to target leaf         → O(log_B N) random reads
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>2. Modify the leaf page in place                   → 1 random write
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>3. If leaf overflows → split + update parent       → 1–2 more random writes
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>4. Fsync the modified pages                        → random I/O
+</code></pre></div>
+<p>Each write requires <strong>random I/O</strong> — seeking to the correct page on disk, modifying it, and fsyncing. On HDDs this is ~10ms per seek. On SSDs it's faster but still involves write amplification from page rewrites.</p>
+<h3 id="how-a-b-tree-read-works">How a B+ Tree read works<a class="headerlink" href="#how-a-b-tree-read-works" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>1. Traverse tree from root to target leaf         → O(log_B N) page reads
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>2. Binary search within the leaf page             → O(log B) comparisons
+</code></pre></div>
+<p>Reads are efficient because the tree is always sorted and balanced. With a branching factor of ~100, even a billion keys need only 4–5 page reads.</p>
+<hr />
+<h2 id="what-is-an-lsm-tree">What is an LSM Tree?<a class="headerlink" href="#what-is-an-lsm-tree" title="Permanent link">&para;</a></h2>
+<p>A Log-Structured Merge Tree takes the opposite approach:</p>
+<ul>
+<li>Writes go to an <strong>in-memory buffer</strong> (memtable) first — no disk I/O on the write path</li>
+<li>When the buffer fills up, it's <strong>flushed as a sorted file</strong> (SSTable) to disk — purely sequential I/O</li>
+<li>Background <strong>compaction</strong> merges sorted files to keep read performance bounded</li>
+<li>Reads check the memtable first, then search through sorted files on disk</li>
+</ul>
+<p>LSM Trees are the foundation of most write-heavy systems (Cassandra, RocksDB, LevelDB, HBase, ScyllaDB) and are optimized for <strong>write-heavy workloads</strong> where throughput matters more than single-read latency.</p>
+<h3 id="how-an-lsm-tree-write-works">How an LSM Tree write works<a class="headerlink" href="#how-an-lsm-tree-write-works" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>1. Append to WAL (sequential write + fsync)        → O(1) sequential I/O
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>2. Insert into in-memory memtable                   → O(log N) in-memory
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>3. Done — no disk page modification                 → no random I/O
+</code></pre></div>
+<p>Every write is <strong>sequential I/O</strong> — appending to the WAL and inserting into memory. No seeking, no page splitting, no in-place modification. This is fundamentally cheaper than B+ Tree writes.</p>
+<h3 id="how-an-lsm-tree-read-works">How an LSM Tree read works<a class="headerlink" href="#how-an-lsm-tree-read-works" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>1. Check memtable (in-memory)                      → O(log N)
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>2. Check each SSTable on disk:
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>   a. Bloom filter test                            → O(k) hash checks
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>   b. Sparse index bisect                          → O(log B) comparisons
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>   c. Block read + scan                            → 1 sequential read
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>3. Return result with highest sequence number
+</code></pre></div>
+<p>Reads are more expensive than B+ Trees because multiple sources must be checked. The cost depends on the number of levels and SSTables. Bloom filters mitigate this by eliminating most negative lookups.</p>
+<hr />
+<h2 id="side-by-side-comparison">Side-by-Side Comparison<a class="headerlink" href="#side-by-side-comparison" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>B+ Tree</th>
+<th>LSM Tree</th>
+<th>Winner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Write latency</strong></td>
+<td>O(log_B N) random I/O</td>
+<td>O(1) sequential I/O</td>
+<td>LSM</td>
+</tr>
+<tr>
+<td><strong>Write throughput</strong></td>
+<td>Bounded by random IOPS</td>
+<td>Bounded by sequential bandwidth</td>
+<td>LSM</td>
+</tr>
+<tr>
+<td><strong>Write amplification</strong></td>
+<td>1× (in-place) + page splits</td>
+<td>L/B to T·L/B (compaction rewrites)</td>
+<td>B+ Tree</td>
+</tr>
+<tr>
+<td><strong>Read latency (point)</strong></td>
+<td>O(log_B N) — predictable</td>
+<td>O(L · φ) to O(T · L · φ) — depends on levels + bloom FPR</td>
+<td>B+ Tree</td>
+</tr>
+<tr>
+<td><strong>Read amplification</strong></td>
+<td>1× — single tree traversal</td>
+<td>L to T·L — check each level</td>
+<td>B+ Tree</td>
+</tr>
+<tr>
+<td><strong>Range scan</strong></td>
+<td>O(k) — leaf pages are linked</td>
+<td>O(k · L) — merge across levels</td>
+<td>B+ Tree</td>
+</tr>
+<tr>
+<td><strong>Space amplification</strong></td>
+<td>~1× (in-place updates)</td>
+<td>1/T to T× (depends on compaction strategy)</td>
+<td>B+ Tree</td>
+</tr>
+<tr>
+<td><strong>Sequential disk access</strong></td>
+<td>Mostly random</td>
+<td>Mostly sequential</td>
+<td>LSM</td>
+</tr>
+<tr>
+<td><strong>SSD friendliness</strong></td>
+<td>Random writes wear SSD faster</td>
+<td>Sequential writes extend SSD life</td>
+<td>LSM</td>
+</tr>
+<tr>
+<td><strong>Concurrent writes</strong></td>
+<td>Page-level locking, splits block</td>
+<td>Memtable-level locking, no disk contention</td>
+<td>LSM</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="the-rum-conjecture">The RUM Conjecture<a class="headerlink" href="#the-rum-conjecture" title="Permanent link">&para;</a></h2>
+<p>The Read-Update-Memory (RUM) conjecture states that any data structure can optimize at most two of three dimensions:</p>
+<ul>
+<li><strong>R</strong>ead cost</li>
+<li><strong>U</strong>pdate (write) cost</li>
+<li><strong>M</strong>emory (space) overhead</li>
+</ul>
+<p>You cannot minimize all three simultaneously. Every design makes a tradeoff:</p>
+<table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Optimizes</th>
+<th>Sacrifices</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B+ Tree</td>
+<td>Read + Memory</td>
+<td>Write (random I/O per update)</td>
+</tr>
+<tr>
+<td>LSM Tree (leveling)</td>
+<td>Read + Memory</td>
+<td>Write (compaction rewrites)</td>
+</tr>
+<tr>
+<td>LSM Tree (tiering)</td>
+<td>Write + Memory</td>
+<td>Read (multiple runs per level)</td>
+</tr>
+<tr>
+<td><strong>LSM Tree (lsm-kv hybrid)</strong></td>
+<td><strong>Write + Read (balanced)</strong></td>
+<td><strong>Memory (bounded L0 overlap)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>lsm-kv's hybrid approach (tiering at L0, leveling at L1+) trades a small, bounded read penalty at L0 for dramatically cheaper writes — the best tradeoff for write-heavy workloads.</p>
+<hr />
+<h2 id="why-lsm-for-write-heavy-workloads">Why LSM for Write-Heavy Workloads<a class="headerlink" href="#why-lsm-for-write-heavy-workloads" title="Permanent link">&para;</a></h2>
+<h3 id="1-sequential-io-is-10100-cheaper-than-random-io">1. Sequential I/O is 10–100× cheaper than random I/O<a class="headerlink" href="#1-sequential-io-is-10100-cheaper-than-random-io" title="Permanent link">&para;</a></h3>
+<p>On an HDD, a sequential write of 64KB takes ~0.1ms. A random write of 4KB takes ~10ms. The LSM write path is entirely sequential — WAL append + SSTable flush. The B+ Tree write path requires random page modifications.</p>
+<p>On SSDs, the gap is smaller (~3–10×) but still significant at scale. Additionally, random small writes to SSDs cause write amplification at the flash translation layer (FTL), reducing SSD lifespan.</p>
+<h3 id="2-write-path-has-no-disk-contention">2. Write path has no disk contention<a class="headerlink" href="#2-write-path-has-no-disk-contention" title="Permanent link">&para;</a></h3>
+<p>B+ Tree writes modify shared pages — concurrent writers must coordinate via page-level locks, and page splits can cascade. LSM writes go to an in-memory memtable. Multiple threads can write concurrently with fine-grained locking (per-node in lsm-kv's skip list). The disk is only involved during background flush, which is non-blocking.</p>
+<h3 id="3-writes-never-block-on-compaction">3. Writes never block on compaction<a class="headerlink" href="#3-writes-never-block-on-compaction" title="Permanent link">&para;</a></h3>
+<p>In lsm-kv, compaction runs in a background subprocess. The write path (WAL + memtable) is completely independent of compaction. In a B+ Tree, there's no concept of background reorganization — every write directly modifies the tree.</p>
+<h3 id="4-write-amplification-is-deferred-and-amortized">4. Write amplification is deferred and amortized<a class="headerlink" href="#4-write-amplification-is-deferred-and-amortized" title="Permanent link">&para;</a></h3>
+<p>A B+ Tree write touches 1–3 pages immediately (leaf + potential splits). An LSM write touches 0 pages immediately (just WAL + memory). The compaction cost is paid later, in the background, and amortized across many writes.</p>
+<hr />
+<h2 id="why-b-trees-win-for-read-heavy-workloads">Why B+ Trees Win for Read-Heavy Workloads<a class="headerlink" href="#why-b-trees-win-for-read-heavy-workloads" title="Permanent link">&para;</a></h2>
+<h3 id="1-single-traversal-predictable-latency">1. Single traversal, predictable latency<a class="headerlink" href="#1-single-traversal-predictable-latency" title="Permanent link">&para;</a></h3>
+<p>A B+ Tree read follows one path from root to leaf — <code>O(log_B N)</code> pages, always. An LSM read may check memtable + multiple SSTables, with latency varying based on where the key lives.</p>
+<h3 id="2-no-bloom-filter-false-positives">2. No bloom filter false positives<a class="headerlink" href="#2-no-bloom-filter-false-positives" title="Permanent link">&para;</a></h3>
+<p>B+ Tree reads are deterministic — the key is either in the leaf or it isn't. LSM reads rely on bloom filters that have a false positive rate (1–5%). Each false positive triggers an unnecessary block read.</p>
+<h3 id="3-range-scans-are-a-linked-list-traversal">3. Range scans are a linked-list traversal<a class="headerlink" href="#3-range-scans-are-a-linked-list-traversal" title="Permanent link">&para;</a></h3>
+<p>B+ Tree leaf nodes are linked. A range scan reads consecutive pages — perfect sequential I/O. An LSM range scan must merge results from multiple levels, each potentially requiring seeks to different SSTables.</p>
+<hr />
+<h2 id="where-lsm-kv-sits-on-the-spectrum">Where lsm-kv Sits on the Spectrum<a class="headerlink" href="#where-lsm-kv-sits-on-the-spectrum" title="Permanent link">&para;</a></h2>
+<p>lsm-kv is designed for <strong>write-heavy workloads with point reads</strong> — the sweet spot for LSM Trees. Its specific optimizations push further toward write performance:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L0 tiering (multiple files)</td>
+<td>Flush is O(N) — no merge-on-write</td>
+</tr>
+<tr>
+<td>Parallel flush pipeline</td>
+<td>2× disk throughput on NVMe</td>
+</tr>
+<tr>
+<td>Subprocess compaction</td>
+<td>GIL bypass — writes never blocked</td>
+</tr>
+<tr>
+<td>Lock-free skip list reads</td>
+<td>Concurrent writes don't block reads</td>
+</tr>
+<tr>
+<td>Bloom filters (per-SSTable)</td>
+<td>Point reads skip irrelevant files</td>
+</tr>
+<tr>
+<td>Three-tier block cache</td>
+<td>Hot metadata stays resident</td>
+</tr>
+<tr>
+<td>Environment-aware bloom FPR</td>
+<td>Dev speed vs prod accuracy</td>
+</tr>
+</tbody>
+</table>
+<p>For workloads that are primarily read-heavy with infrequent writes, a B+ Tree (PostgreSQL, SQLite) would be more appropriate. For workloads with high write throughput, time-series data, log ingestion, or append-heavy patterns, the LSM architecture provides fundamentally better performance.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-zoom.js"></script>
+      
+    
+  </body>
+</html>

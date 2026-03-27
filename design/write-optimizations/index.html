@@ -1,0 +1,2579 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Production-grade Log-Structured Merge Tree Key-Value Store">
+      
+      
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+        <link rel="next" href="../read-write-flow/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Write Optimizations - lsm-kv Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/mermaid-zoom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#write-path-optimizations" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="lsm-kv Documentation" class="md-header__button md-logo" aria-label="lsm-kv Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            lsm-kv Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Write Optimizations
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/your-org/lsm-kv" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="lsm-kv Documentation" class="md-nav__button md-logo" aria-label="lsm-kv Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    lsm-kv Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/your-org/lsm-kv" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types & Constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/abc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts (ABCs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/memtable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MemTable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/wal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WAL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/sstable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSTable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/bloom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bloom Filter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Block Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sparse Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/compaction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compaction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/flush/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flush Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Docs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Design Docs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lsm-vs-btree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LSM Trees vs B+ Trees
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../comparison-leveldb-rocksdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vs LevelDB & RocksDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Write Optimizations
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Write Optimizations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-l0-multiple-files-l1-single-file-write-optimized-level-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. L0 Multiple Files / L1+ Single File: Write-Optimized Level Organization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-parallel-flush-pipeline-with-ordered-commits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Parallel Flush Pipeline with Ordered Commits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-subprocess-compaction-gil-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Subprocess Compaction (GIL Bypass)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-write-path-atomic-under-a-single-lock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Write Path: Atomic Under a Single Lock
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-concurrent-skip-list-with-lock-free-reads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Concurrent Skip List with Lock-Free Reads
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-backpressure-bounded-immutable-queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Backpressure: Bounded Immutable Queue
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-sstable-four-file-layout-with-completeness-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. SSTable Four-File Layout with Completeness Signal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-wal-design-msgpack-framing-with-per-write-fsync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. WAL Design: Msgpack Framing with Per-Write Fsync
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-level-reservation-for-conflict-free-compaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Level Reservation for Conflict-Free Compaction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-bloom-filter-data-derived-sizing-with-environment-aware-fpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Bloom Filter: Data-Derived Sizing with Environment-Aware FPR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-lazy-loading-with-cross-reader-cache-reuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Lazy Loading with Cross-Reader Cache Reuse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-three-tier-block-cache-with-differential-eviction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Three-Tier Block Cache with Differential Eviction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-runtime-mutable-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Runtime-Mutable Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-recovery-seq-based-wal-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Recovery: Seq-Based WAL Filtering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-asyncrwlock-with-writer-preference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. AsyncRWLock with Writer Preference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-mmap-reads-with-zero-copy-block-scanning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. mmap Reads with Zero-Copy Block Scanning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-manifest-atomic-persistence-via-temp-replace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Manifest: Atomic Persistence via Temp + Replace
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-write-path-optimization-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: Write-Path Optimization Stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../read-write-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Read & Write Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memtable-impl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MemTable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memtable-manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MemTable Manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sstable-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSTable Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sstable-manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSTable Manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../common-components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../async-io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async I/O Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flush-pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flush Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-flush/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel Flush
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compaction-spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compaction Spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compaction-manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compaction Manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-l0-multiple-files-l1-single-file-write-optimized-level-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. L0 Multiple Files / L1+ Single File: Write-Optimized Level Organization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-parallel-flush-pipeline-with-ordered-commits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Parallel Flush Pipeline with Ordered Commits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-subprocess-compaction-gil-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Subprocess Compaction (GIL Bypass)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-write-path-atomic-under-a-single-lock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Write Path: Atomic Under a Single Lock
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-concurrent-skip-list-with-lock-free-reads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Concurrent Skip List with Lock-Free Reads
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-backpressure-bounded-immutable-queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Backpressure: Bounded Immutable Queue
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-sstable-four-file-layout-with-completeness-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. SSTable Four-File Layout with Completeness Signal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-wal-design-msgpack-framing-with-per-write-fsync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. WAL Design: Msgpack Framing with Per-Write Fsync
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-level-reservation-for-conflict-free-compaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Level Reservation for Conflict-Free Compaction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-bloom-filter-data-derived-sizing-with-environment-aware-fpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Bloom Filter: Data-Derived Sizing with Environment-Aware FPR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-lazy-loading-with-cross-reader-cache-reuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Lazy Loading with Cross-Reader Cache Reuse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-three-tier-block-cache-with-differential-eviction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Three-Tier Block Cache with Differential Eviction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-runtime-mutable-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Runtime-Mutable Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-recovery-seq-based-wal-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Recovery: Seq-Based WAL Filtering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-asyncrwlock-with-writer-preference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. AsyncRWLock with Writer Preference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-mmap-reads-with-zero-copy-block-scanning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. mmap Reads with Zero-Copy Block Scanning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-manifest-atomic-persistence-via-temp-replace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Manifest: Atomic Persistence via Temp + Replace
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-write-path-optimization-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: Write-Path Optimization Stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="write-path-optimizations">Write-Path Optimizations<a class="headerlink" href="#write-path-optimizations" title="Permanent link">&para;</a></h1>
+<p>This document catalogs every significant design decision in lsm-kv and explains how each one contributes to a write-optimized LSM architecture. Sections are ordered by impact on write throughput — the highest-impact architectural decisions first, supporting optimizations later. Each section provides enough context for generating presentation slides — including the problem, the chosen solution, what alternatives exist, and the concrete benefit.</p>
+<hr />
+<h2 id="1-l0-multiple-files-l1-single-file-write-optimized-level-organization">1. L0 Multiple Files / L1+ Single File: Write-Optimized Level Organization<a class="headerlink" href="#1-l0-multiple-files-l1-single-file-write-optimized-level-organization" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: In a traditional leveled LSM-Tree, every level maintains a single sorted run. When a memtable is flushed, the resulting SSTable must be <em>merged</em> into the existing L0 sorted run before the flush can complete. This merge-on-write design means the write path is blocked by compaction-like I/O — the very thing compaction was supposed to defer.</p>
+<p><strong>Decision</strong>: lsm-kv splits level organization into two distinct strategies:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Files</th>
+<th>Key Ranges</th>
+<th>Flush Cost</th>
+<th>Read Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L0</strong></td>
+<td>Up to 10 SSTables</td>
+<td><strong>Overlapping</strong> — same key can exist in multiple files</td>
+<td><strong>O(1)</strong>: just write a new file, no merge</td>
+<td>Must check <strong>all</strong> L0 files</td>
+</tr>
+<tr>
+<td><strong>L1–L3</strong></td>
+<td>Exactly 1 SSTable per level</td>
+<td><strong>Non-overlapping</strong> — fully merged and deduplicated</td>
+<td>N/A (produced by compaction)</td>
+<td>Check <strong>one</strong> file per level</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Architecture Diagram" src="../images/sst_org_optimization_1.jpeg" /></p>
+<!-- ![Architecture Diagram](images/sst_org_optimization_2.jpeg) -->
+
+<p><strong>How this optimizes writes</strong>:</p>
+<p>The flush pipeline writes a new L0 SSTable and <em>returns immediately</em>. No merge, no sorting against existing L0 data, no blocking on compaction. The write path never touches existing SSTables — it only creates new files.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Traditional LSM (merge-on-flush):
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  freeze memtable → merge with L0 sorted run → replace L0 → done
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  └── blocked on merge I/O (100–500ms for 64MB)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>lsm-kv (append-to-L0):
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  freeze memtable → write new L0 file → register in manifest → done
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  └── no merge; flush is pure sequential write (~50ms for 64MB)
+</code></pre></div>
+<p>This is the foundational write-throughput optimization. Everything else — the parallel flush pipeline, the subprocess compaction, the level reservations — builds on this separation between "fast L0 append" and "deferred background merge."</p>
+<p><strong>The read-side tradeoff</strong>: Since L0 files have overlapping key ranges, <code>get()</code> must check <em>all</em> L0 files (not just one). This is mitigated by:</p>
+<ol>
+<li><strong>Bloom filters</strong> — each L0 file has its own bloom filter. A negative bloom check skips the entire file in microseconds.</li>
+<li><strong>Bounded L0 count</strong> — compaction triggers at <code>l0_compaction_threshold</code> (default 10). L0 never grows unbounded.</li>
+<li><strong>Newest-first ordering</strong> — L0 files are scanned newest-first. For hot keys (recently written), the first file often has the answer.</li>
+</ol>
+<p><strong>Compaction benefit</strong>: When L0 reaches the threshold, <em>all</em> L0 files are merged into a single L1 file in one pass. L1+ levels always hold exactly one file, so subsequent compactions (L1→L2, L2→L3) are simple two-file merges — no fan-out, no multi-way coordination.</p>
+<p><strong>Alternative considered</strong>: Universal compaction (all levels allow multiple files). Rejected because it increases read amplification at every level and makes point lookups expensive deep in the tree. The L0-multiple/L1+-single hybrid gives the write speed of universal compaction at L0 with the read efficiency of leveled compaction at L1+.</p>
+<hr />
+<h2 id="2-parallel-flush-pipeline-with-ordered-commits">2. Parallel Flush Pipeline with Ordered Commits<a class="headerlink" href="#2-parallel-flush-pipeline-with-ordered-commits" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: Flushing memtable snapshots to SSTables is I/O-bound (~200–500ms per 64MB SSTable). Sequential flushing wastes disk bandwidth when multiple snapshots are queued.</p>
+<p><strong>Decision</strong>: Two-phase flush with parallel writes and serialized commits:</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Parallelism</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Phase 1: Write</strong></td>
+<td>Parallel (up to <code>flush_max_workers</code>, default 2)</td>
+<td>SSTableWriter produces data.bin + index.bin + filter.bin + meta.json</td>
+</tr>
+<tr>
+<td><strong>Phase 2: Commit</strong></td>
+<td>Serialized (oldest-first via event chain)</td>
+<td>Register reader → pop queue → truncate WAL → trigger compaction</td>
+</tr>
+</tbody>
+</table>
+<p>The ordering mechanism is an <code>asyncio.Event</code> chain:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>slot0.prev_committed = pre_set_event       ← commits immediately
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>slot0.my_committed   = Event_A
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>slot1.prev_committed = Event_A             ← waits for slot0
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>slot1.my_committed   = Event_B
+</code></pre></div>
+<p><strong>Why it matters</strong>: Disk writes are the bottleneck. Parallelizing them doubles throughput on NVMe. But commits must be FIFO to maintain the immutable queue invariant — the oldest snapshot must be committed first so <code>pop_oldest()</code> removes the correct entry.</p>
+<p><strong>Failure handling</strong>: If any slot fails, <code>batch_abort</code> is set — all downstream slots skip their commits. The failed snapshot stays in the queue and is retried on the next dispatch cycle. <code>my_committed</code> is always set in a <code>finally</code> block to prevent event chain deadlock.</p>
+<p><strong>Operational Complexity Comparison</strong> (K = queued snapshots, W = max_workers, T_io = single SSTable write time):</p>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Flush Latency (K snapshots)</th>
+<th>Disk Utilization</th>
+<th>Commit Ordering</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>lsm-kv (parallel write + serial commit)</strong></td>
+<td><strong>T_io × ceil(K/W)</strong> — parallel bounded by W</td>
+<td><strong>~100%</strong> with W=2 on NVMe</td>
+<td>Guaranteed FIFO via event chain</td>
+</tr>
+<tr>
+<td>Sequential flush (one at a time)</td>
+<td>T_io × K — fully serial</td>
+<td>~50% on NVMe (idle between flushes)</td>
+<td>Trivially ordered</td>
+</tr>
+<tr>
+<td>Fully parallel (no ordering)</td>
+<td>T_io × 1 (all concurrent)</td>
+<td>~100%</td>
+<td><strong>Broken</strong> — manifest non-deterministic, queue pops unordered</td>
+</tr>
+<tr>
+<td>Batched flush (group then write)</td>
+<td>T_io + merge cost</td>
+<td>Variable</td>
+<td>Requires post-merge sort</td>
+</tr>
+</tbody>
+</table>
+<p>With W=2 and K=4 queued snapshots: sequential takes 4 × T_io, parallel takes 2 × T_io — a <strong>2x throughput improvement</strong> with correctness preserved by the event chain. The commit phase is O(1) per slot (register + pop + truncate), so the serialization overhead is negligible (&lt;5ms vs 200–500ms write time).</p>
+<hr />
+<h2 id="3-subprocess-compaction-gil-bypass">3. Subprocess Compaction (GIL Bypass)<a class="headerlink" href="#3-subprocess-compaction-gil-bypass" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: Compaction merges large SSTables — a CPU-bound operation. On CPython 3.12 with GIL enabled, threading cannot achieve true parallelism for this workload.</p>
+<p><strong>Decision</strong>: Compaction runs in a <code>ProcessPoolExecutor</code> subprocess:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Main Process (asyncio)              Subprocess (own GIL)
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>─────────────────────               ─────────────────────
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>CompactionManager                   run_compaction(task)
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  _build_task() → CompactionTask      open input SSTables
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  asyncio.to_thread(                   KWayMergeIterator
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    pool.submit(run_compaction)          dedup + GC tombstones
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  )                                    SSTableWriter.finish_sync()
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  ← SSTableMeta result                return SSTableMeta
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  commit_compaction_async()
+</code></pre></div>
+<p><strong>Why it matters</strong>: The merge is CPU-bound (decode records, compare keys, re-encode). Running it in a subprocess with its own GIL means the main event loop continues accepting writes and reads uninterrupted.</p>
+<p><strong>CompactionTask serialization</strong>: The task is a frozen dataclass with only primitive fields (str, int, list, dict, float) — no file handles, no locks, no live objects. Safe to send across the process boundary.</p>
+<p><strong>Non-blocking dispatch</strong>: <code>asyncio.create_task()</code> launches the job and returns immediately. The engine doesn't wait for compaction to finish.</p>
+<p><strong>Operational Complexity Comparison</strong> (M = total records to merge, T_merge = merge time):</p>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Write Path Blocking</th>
+<th>Merge Parallelism</th>
+<th>Event Loop Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>lsm-kv (ProcessPoolExecutor subprocess)</strong></td>
+<td><strong>Zero</strong> — fire-and-forget dispatch</td>
+<td><strong>True parallelism</strong> — own GIL, own memory space</td>
+<td><strong>None</strong> — event loop free for put/get</td>
+</tr>
+<tr>
+<td>In-thread compaction (GIL)</td>
+<td>Zero (background thread)</td>
+<td><strong>None</strong> — GIL serializes with writes</td>
+<td>CPU-bound merge competes with writes for GIL</td>
+</tr>
+<tr>
+<td>Synchronous compaction (inline)</td>
+<td><strong>O(M)</strong> — blocks until merge completes</td>
+<td>N/A</td>
+<td><strong>Blocked</strong> — no writes during merge</td>
+</tr>
+<tr>
+<td>Async compaction (to_thread)</td>
+<td>Zero (offloaded)</td>
+<td><strong>None</strong> — still one GIL</td>
+<td>Moderate — thread pool contention with WAL fsync</td>
+</tr>
+</tbody>
+</table>
+<p>The subprocess approach is the only option that achieves true parallelism on CPython 3.12. A 64MB L0→L1 merge (~650K records) takes ~500ms of CPU. With in-thread compaction, this 500ms competes with the write path for GIL time slices. With subprocess, both run at full speed simultaneously.</p>
+<hr />
+<h2 id="4-write-path-atomic-under-a-single-lock">4. Write Path: Atomic Under a Single Lock<a class="headerlink" href="#4-write-path-atomic-under-a-single-lock" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: Traditional LSMs either use separate locks per component (WAL lock, memtable lock) risking inconsistency, or a coarse global lock that blocks reads during writes.</p>
+<p><strong>Decision</strong>: A single <code>_mem.write_lock</code> (RLock) protects the entire atomic write sequence:</p>
+<ol>
+<li><code>SeqGenerator.next()</code> — monotonic sequence number</li>
+<li><code>WALManager.sync_append()</code> — encode + write + fsync (durability)</li>
+<li><code>MemTableManager.put()</code> — skip list insert (visibility)</li>
+<li><code>MemTableManager.maybe_freeze()</code> — threshold check + possible freeze</li>
+</ol>
+<p><strong>Why it matters</strong>: The WAL is fsynced <em>before</em> the memtable is updated. If the process crashes after fsync but before memtable put, recovery replays the WAL entry. If it crashes before fsync, the write was never acknowledged — no data loss in either case.</p>
+<p><strong>Alternative considered</strong>: Per-component locks with two-phase commit. Rejected because it adds complexity without throughput gain — the bottleneck is fsync latency (~1ms), not lock contention.</p>
+<p><strong>Lock ordering rule</strong>: <code>_mem.write_lock</code> → <code>_wal_lock</code>. Never reversed. Enforced by code structure — the engine acquires write_lock, then sync_append acquires wal_lock internally.</p>
+<p><strong>Operational Complexity Comparison</strong> (T_fsync = WAL fsync latency, T_put = memtable insert):</p>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Write Latency</th>
+<th>Consistency Guarantee</th>
+<th>Read Blocking</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>lsm-kv (single atomic lock)</strong></td>
+<td><strong>T_fsync + T_put</strong> — sequential under one lock</td>
+<td><strong>Full</strong> — WAL durable before memtable visible</td>
+<td><strong>None</strong> — readers are lock-free</td>
+</tr>
+<tr>
+<td>Per-component locks (WAL lock + memtable lock)</td>
+<td>T_fsync ‖ T_put — potentially parallel</td>
+<td>Requires 2PC or ordering protocol</td>
+<td>Depends on lock design</td>
+</tr>
+<tr>
+<td>Global RWLock (read/write lock)</td>
+<td>T_fsync + T_put — same latency</td>
+<td>Full</td>
+<td><strong>Readers block during writes</strong></td>
+</tr>
+<tr>
+<td>Lock-free CAS (compare-and-swap)</td>
+<td>T_fsync + T_put — plus retry overhead</td>
+<td>Requires careful memory ordering</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p>The single-lock approach has the same write latency as alternatives (T_fsync dominates at ~1ms, T_put is microseconds) but is simpler and doesn't block readers. Per-component locks add coordination complexity for no throughput gain because fsync is the bottleneck, not lock contention.</p>
+<hr />
+<h2 id="5-concurrent-skip-list-with-lock-free-reads">5. Concurrent Skip List with Lock-Free Reads<a class="headerlink" href="#5-concurrent-skip-list-with-lock-free-reads" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: The memtable needs to support concurrent writes from multiple threads while allowing lock-free reads for the hot read path.</p>
+<p><strong>Decision</strong>: A probabilistic skip list with three concurrency mechanisms:</p>
+<table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Who</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Per-node locks</td>
+<td>Writers</td>
+<td>Lock only predecessor nodes at insertion boundary</td>
+</tr>
+<tr>
+<td>Lock-free reads</td>
+<td>Readers</td>
+<td>Check <code>fully_linked</code> and <code>marked</code> boolean flags (GIL-atomic)</td>
+</tr>
+<tr>
+<td>Deterministic lock ordering</td>
+<td>Writers</td>
+<td>Acquire locks in ascending <code>id()</code> order to prevent deadlock</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why it matters</strong>: Readers (the <code>get()</code> path) never block. The <code>fully_linked</code> flag is the visibility barrier — it's set to <code>True</code> only after all forward pointers are linked, making the node atomically visible to concurrent readers.</p>
+<p><strong>Alternative comparison</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Sorted Iteration</th>
+<th>Point Lookup</th>
+<th>Concurrent Writes</th>
+<th>Lock-Free Reads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Skip List</strong></td>
+<td>O(n)</td>
+<td>O(log n)</td>
+<td>Per-node locks</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Hash Map</td>
+<td>Requires sort</td>
+<td>O(1) avg</td>
+<td>Global lock</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>B-Tree</td>
+<td>O(n)</td>
+<td>O(log n)</td>
+<td>Complex rebalancing</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Skip list wins because SSTable flush requires sorted iteration, and lock-free reads are critical for throughput.</p>
+<p><strong>Safety bound</strong>: 64 retries before raising <code>SkipListInsertError</code>. Prevents live-lock under extreme contention.</p>
+<p><strong>Operational Complexity Comparison</strong> (N = entries, C = concurrent writers, R = concurrent readers):</p>
+<table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Write</th>
+<th>Read</th>
+<th>Freeze (sorted snapshot)</th>
+<th>Write Contention (C writers)</th>
+<th>Read Contention (R readers)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Skip List (lsm-kv)</strong></td>
+<td><strong>O(log N)</strong> per-node lock</td>
+<td><strong>O(log N)</strong> lock-free</td>
+<td><strong>O(N)</strong> lock-free iteration</td>
+<td><strong>O(C × log N)</strong> — disjoint keys don't contend</td>
+<td><strong>Zero</strong> — no locks</td>
+</tr>
+<tr>
+<td>B-Tree + RWLock</td>
+<td>O(log N) write-locked</td>
+<td>O(log N) read-locked</td>
+<td>O(N) read-locked</td>
+<td>O(C × log N) — serialized by global write lock</td>
+<td>O(R × log N) — blocked during writes</td>
+</tr>
+<tr>
+<td>Hash Map + sort-on-freeze</td>
+<td><strong>O(1)</strong> amortized</td>
+<td><strong>O(1)</strong></td>
+<td><strong>O(N log N)</strong> sort required</td>
+<td>O(C) — global lock</td>
+<td>Zero (if lock-free hash)</td>
+</tr>
+<tr>
+<td>Red-Black Tree + RWLock</td>
+<td>O(log N)</td>
+<td>O(log N)</td>
+<td>O(N)</td>
+<td>Rebalancing holds lock longer</td>
+<td>Blocked during rebalance</td>
+</tr>
+</tbody>
+</table>
+<p>The skip list's unique advantage: <strong>writes are O(log N) with per-node locking</strong> (concurrent writes to disjoint keys proceed without contention) <strong>and reads are O(log N) with zero locking</strong> (GIL-atomic flag checks). The hash map alternative has O(1) writes but pays O(N log N) at freeze time — for a 64MB memtable with ~650K entries, that's a significant freeze stall.</p>
+<hr />
+<h2 id="6-backpressure-bounded-immutable-queue">6. Backpressure: Bounded Immutable Queue<a class="headerlink" href="#6-backpressure-bounded-immutable-queue" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: If the flush pipeline falls behind, frozen memtable snapshots accumulate in memory without bound, eventually causing OOM.</p>
+<p><strong>Decision</strong>: The immutable queue has a maximum depth (<code>immutable_queue_max_len</code>, default 4). When full, <code>maybe_freeze()</code> blocks the writer on a <code>Condition.wait()</code> with a 60-second timeout:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Writer calls put() → threshold reached → maybe_freeze()
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  └─ queue full? → wait(60s) → FreezeBackpressureTimeout if still full
+</code></pre></div>
+<p><strong>Why it matters</strong>: Backpressure propagates to the caller — if the disk can't keep up, writes slow down rather than consuming unbounded memory. The timeout detects stuck flush pipelines (e.g., disk failure) and raises an actionable error.</p>
+<p><strong>Operational Complexity Comparison</strong> (Q = queue depth, M = memtable size, D = disk throughput):</p>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Memory Usage</th>
+<th>Write Stall Behavior</th>
+<th>Failure Detection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>lsm-kv (bounded queue + timeout)</strong></td>
+<td><strong>O(Q × M)</strong> — bounded at 4 × 64MB = 256MB max</td>
+<td><strong>Controlled</strong> — blocks writer, resumes when space frees</td>
+<td><strong>60s timeout</strong> → FreezeBackpressureTimeout</td>
+</tr>
+<tr>
+<td>Unbounded queue (no limit)</td>
+<td><strong>O(∞)</strong> — grows until OOM</td>
+<td><strong>None</strong> — writes never stall, then process crashes</td>
+<td>OOM kill (uncontrolled)</td>
+</tr>
+<tr>
+<td>Drop-oldest (evict unflushed)</td>
+<td>O(Q × M) — bounded</td>
+<td>None — but <strong>loses data</strong> silently</td>
+<td>No detection needed (data lost)</td>
+</tr>
+<tr>
+<td>Rate limiting (token bucket)</td>
+<td>O(Q × M) — bounded</td>
+<td>Smooth degradation</td>
+<td>Latency spike detection</td>
+</tr>
+</tbody>
+</table>
+<p>The bounded queue with timeout is the only approach that provides: (1) bounded memory (no OOM), (2) no data loss (snapshot stays in queue), and (3) actionable failure detection (timeout raises a named exception the caller can handle).</p>
+<hr />
+<h2 id="7-sstable-four-file-layout-with-completeness-signal">7. SSTable Four-File Layout with Completeness Signal<a class="headerlink" href="#7-sstable-four-file-layout-with-completeness-signal" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: A crash during SSTable write must not produce a corrupted table that poisons reads on recovery.</p>
+<p><strong>Decision</strong>: Each SSTable is a directory with four files, written in a specific order:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>1. data.bin      ← sorted records in blocks (written during put() calls)
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>2. index.bin     ← sparse index (written during finish())
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>3. filter.bin    ← bloom filter (written during finish(), concurrent with index)
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>4. meta.json     ← metadata (written LAST — completeness signal)
+</code></pre></div>
+<p><strong>Why it matters</strong>: <code>meta.json</code> is the completeness signal. If it exists, all other files are guaranteed to be fully written and fsynced. If it's missing (crash during write), the SSTable directory is ignored on recovery. No corruption, no partial reads.</p>
+<p>For L0 SSTables, <code>finish()</code> writes bloom and index <strong>concurrently</strong> via <code>asyncio.gather()</code> — parallelizing two I/O operations that are independent.</p>
+<hr />
+<h2 id="8-wal-design-msgpack-framing-with-per-write-fsync">8. WAL Design: Msgpack Framing with Per-Write Fsync<a class="headerlink" href="#8-wal-design-msgpack-framing-with-per-write-fsync" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: The WAL must be durable (survive process crash), compact (minimize I/O), and recoverable (detect corruption).</p>
+<p><strong>Decision</strong>: Each WAL entry is framed as:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>[4B payload length][msgpack(seq, ts, op, key, value)][4B CRC32]
+</code></pre></div>
+<ul>
+<li><strong>Msgpack</strong>: Compact binary encoding (vs JSON), fast to encode/decode</li>
+<li><strong>Length prefix</strong>: Enables fast forward scanning during replay</li>
+<li><strong>CRC32 per frame</strong>: Detects corruption at frame granularity — a partial write from a crash is detected and replay stops cleanly</li>
+<li><strong>Fsync per write</strong>: Every <code>append()</code> calls <code>fd.flush()</code> + <code>os.fsync()</code> before returning</li>
+</ul>
+<p><strong>Why it matters</strong>: Per-write fsync is the conservative choice — every acknowledged write is durable. During recovery, entries already flushed to SSTables are filtered by sequence number (<code>seq &gt; sst_max_seq</code>), avoiding redundant replay.</p>
+<hr />
+<h2 id="9-level-reservation-for-conflict-free-compaction">9. Level Reservation for Conflict-Free Compaction<a class="headerlink" href="#9-level-reservation-for-conflict-free-compaction" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: Multiple compaction jobs can run concurrently, but adjacent-level jobs conflict. An L0→L1 job reads L1, so a concurrent L1→L2 job writing to L1 would cause data corruption.</p>
+<p><strong>Decision</strong>: A set-based reservation system tracks active levels:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">_active_levels</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Level</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># Reserve: blocked if either level is already active</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">if</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">_active_levels</span> <span class="ow">or</span> <span class="n">dst</span> <span class="ow">in</span> <span class="n">_active_levels</span><span class="p">:</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># skip this job, try next cycle</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">_active_levels</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">_active_levels</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Conflict matrix</strong> (with <code>max_levels = 3</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Running Job</th>
+<th>Reserves</th>
+<th>Blocks</th>
+<th>Can Parallel With</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L0→L1</td>
+<td>{0, 1}</td>
+<td>L0→L1, L1→L2</td>
+<td>L2→L3</td>
+</tr>
+<tr>
+<td>L1→L2</td>
+<td>{1, 2}</td>
+<td>L0→L1, L1→L2, L2→L3</td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>L2→L3</td>
+<td>{2, 3}</td>
+<td>L1→L2, L2→L3</td>
+<td>L0→L1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why it matters</strong>: Only truly independent jobs run in parallel. After a job completes, <code>check_and_compact()</code> is re-triggered to pick up deferred work — cascading compactions happen naturally.</p>
+<hr />
+<h2 id="10-bloom-filter-data-derived-sizing-with-environment-aware-fpr">10. Bloom Filter: Data-Derived Sizing with Environment-Aware FPR<a class="headerlink" href="#10-bloom-filter-data-derived-sizing-with-environment-aware-fpr" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: A bloom filter that's too large wastes memory and build time. One that's too small has excessive false positives, causing unnecessary disk reads.</p>
+<p><strong>Decision</strong>: Two parameters, sourced differently:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Source</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bloom_n</code> (expected items)</td>
+<td><strong>Actual data count</strong> — <code>len(snapshot)</code> for flush, <code>sum(record_counts)</code> for compaction</td>
+<td>Exact</td>
+</tr>
+<tr>
+<td><code>bloom_fpr</code> (false positive rate)</td>
+<td><strong>Config</strong> — <code>bloom_fpr_dev = 0.05</code>, <code>bloom_fpr_prod = 0.01</code></td>
+<td>Environment-aware</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why it matters</strong>: Using the actual record count produces an optimally sized filter — no over-provisioning, no under-provisioning. The FPR tradeoff is:</p>
+<ul>
+<li><strong>Dev (5%)</strong>: Smaller filters, faster builds, good enough for small test datasets</li>
+<li><strong>Prod (1%)</strong>: Larger filters, fewer false disk reads on production workloads</li>
+</ul>
+<p>The optimal bit count and hash count are derived from standard formulas:
+- Bit count: <code>m = -n × ln(fpr) / ln²(2)</code>
+- Hash count: <code>k = (m/n) × ln(2)</code></p>
+<hr />
+<h2 id="11-lazy-loading-with-cross-reader-cache-reuse">11. Lazy Loading with Cross-Reader Cache Reuse<a class="headerlink" href="#11-lazy-loading-with-cross-reader-cache-reuse" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: Opening an SSTable eagerly (loading bloom filter + sparse index at open time) is wasteful when most L0 files are compacted away before being queried.</p>
+<p><strong>Decision</strong>: Bloom and index are loaded <strong>lazily on first <code>get()</code> call</strong>, not at open time:</p>
+<ol>
+<li>Check <code>BlockCache</code> for cached bytes (sentinel offsets: -1 for bloom, -2 for index)</li>
+<li>On cache miss, read from disk (<code>filter.bin</code>, <code>index.bin</code>)</li>
+<li>Populate cache for future readers</li>
+<li>Deserialize into <code>BloomFilter</code> and <code>SparseIndex</code> objects</li>
+</ol>
+<p><strong>Why it matters</strong>: At startup, the engine opens all SSTables but only mmaps <code>data.bin</code>. The bloom and index are deferred until actually needed. After the first read, they're cached — even if the reader is closed and a new one opened for the same file (common after engine restart), the cache hit avoids disk I/O entirely.</p>
+<hr />
+<h2 id="12-three-tier-block-cache-with-differential-eviction">12. Three-Tier Block Cache with Differential Eviction<a class="headerlink" href="#12-three-tier-block-cache-with-differential-eviction" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: A single LRU cache treats all entries equally, but bloom filters and indexes are far more valuable than individual data blocks — they're reused across many queries.</p>
+<p><strong>Decision</strong>: Three separate LRU caches with independent capacities:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Sentinel Offset</th>
+<th>Default Capacity</th>
+<th>Eviction Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data blocks</td>
+<td>&gt;= 0</td>
+<td>256 entries</td>
+<td>Evicted first</td>
+</tr>
+<tr>
+<td>Sparse indexes</td>
+<td>-2</td>
+<td>64 entries</td>
+<td>Medium retention</td>
+</tr>
+<tr>
+<td>Bloom filters</td>
+<td>-1</td>
+<td>64 entries</td>
+<td>Evicted last</td>
+</tr>
+</tbody>
+</table>
+<p>Routing is automatic — the <code>offset</code> parameter determines which tier receives the entry.</p>
+<p><strong>Why it matters</strong>: Under heavy read load, data blocks churn through the cache rapidly. Without tiering, they would evict bloom filters and indexes, forcing expensive re-loads. With tiering, blooms and indexes stay resident while data blocks rotate through their own pool.</p>
+<hr />
+<h2 id="13-runtime-mutable-configuration">13. Runtime-Mutable Configuration<a class="headerlink" href="#13-runtime-mutable-configuration" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: Production workloads change over time. Fixed thresholds require restart to tune.</p>
+<p><strong>Decision</strong>: All thresholds are stored in <code>config.json</code> and read at the point of use (not cached):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># In MemTableManager.maybe_freeze():</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">is_prod</span><span class="p">:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active</span><span class="o">.</span><span class="n">size_bytes</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">max_memtable_bytes</span>
+</code></pre></div>
+<p>Updating a config value:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">engine</span><span class="o">.</span><span class="n">update_config</span><span class="p">(</span><span class="s2">&quot;max_memtable_entries&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>  <span class="c1"># takes effect on next put()</span>
+</code></pre></div></p>
+<p>The update is persisted atomically (temp file + <code>os.replace()</code>) and logged.</p>
+<p><strong>Why it matters</strong>: No restart needed to tune freeze thresholds, compaction triggers, bloom FPR, or cache sizes. The dev/prod mode switch (<code>config.set("env", "prod")</code>) changes multiple behaviors at once — freeze trigger type, bloom FPR, compaction threshold scaling.</p>
+<hr />
+<h2 id="14-recovery-seq-based-wal-filtering">14. Recovery: Seq-Based WAL Filtering<a class="headerlink" href="#14-recovery-seq-based-wal-filtering" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: After a crash, the WAL may contain entries that were already flushed to SSTables before the crash. Replaying them is redundant and wastes time.</p>
+<p><strong>Decision</strong>: Recovery filters WAL entries by sequence number:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>1. sst_max_seq = SSTableManager.max_seq_seen()     ← highest seq in all SSTables
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>2. entries = WAL.replay()                            ← all entries in WAL
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>3. unflushed = [e for e in entries if e.seq &gt; sst_max_seq]
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>4. MemTableManager.restore(unflushed)               ← replay only unflushed
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>5. SeqGenerator.restore(max_unflushed_seq)           ← ensure next seq is higher
+</code></pre></div>
+<p><strong>Why it matters</strong>: On a store with millions of entries, the WAL might have thousands of entries from the last few seconds. But most are already in SSTables. Seq-based filtering skips them in O(n) with no disk I/O — just integer comparison.</p>
+<hr />
+<h2 id="15-asyncrwlock-with-writer-preference">15. AsyncRWLock with Writer Preference<a class="headerlink" href="#15-asyncrwlock-with-writer-preference" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: During compaction commits, the SSTableManager needs exclusive access to a level's file list. But reads are far more frequent than compaction commits. A reader-preference lock would starve the compaction commit under continuous read load.</p>
+<p><strong>Decision</strong>: Writer-preference async RWLock — once a writer is waiting, new readers block:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Reader arrives → if writer_waiting &gt; 0: block
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Writer arrives → wait for readers == 0, then proceed
+</code></pre></div>
+<p>Each compaction level has its own lock. This means:
+- L0 reads and L2→L3 compaction proceed simultaneously (different locks)
+- L0 reads block briefly during L0→L1 commit (same lock, &lt; 5ms)</p>
+<p><strong>Why it matters</strong>: Compaction must complete promptly to prevent L0 buildup. Writer preference ensures compaction commits aren't starved, while per-level granularity limits reader blocking to only the affected level.</p>
+<hr />
+<h2 id="16-mmap-reads-with-zero-copy-block-scanning">16. mmap Reads with Zero-Copy Block Scanning<a class="headerlink" href="#16-mmap-reads-with-zero-copy-block-scanning" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: Reading SSTable records involves I/O. Traditional approaches copy data from kernel to user space, then deserialize each record.</p>
+<p><strong>Decision</strong>: <code>data.bin</code> is memory-mapped at open time. Reads use <code>memoryview</code> slicing — no copy until cache insertion:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">mv</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mm</span><span class="p">)</span>           <span class="c1"># zero-copy view into mmap</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">iter_block</span><span class="p">(</span><span class="n">mv</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>  <span class="c1"># decode records on-the-fly</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">if</span> <span class="n">rec</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>        <span class="k">return</span> <span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">seq</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">timestamp_ms</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</code></pre></div>
+<p>Cache insertion is the only copy:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">file_id</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mm</span><span class="p">[</span><span class="n">offset</span><span class="p">:</span><span class="n">end</span><span class="p">]))</span>
+</code></pre></div></p>
+<p><strong>Why it matters</strong>: After the OS page cache is warm, mmap reads are effectively memory reads — no syscall, no copy. The <code>iter_block()</code> generator decodes records lazily and stops early when <code>rec.key &gt; key</code> (records are sorted).</p>
+<hr />
+<h2 id="17-manifest-atomic-persistence-via-temp-replace">17. Manifest: Atomic Persistence via Temp + Replace<a class="headerlink" href="#17-manifest-atomic-persistence-via-temp-replace" title="Permanent link">&para;</a></h2>
+<p><strong>Problem</strong>: The manifest tracks L0 ordering and per-level file assignments. A corrupt manifest after crash means all SSTables become orphaned.</p>
+<p><strong>Decision</strong>: Manifest written via temp file + <code>os.replace()</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">tmp</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">manifest_dir</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">tmp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">layout</span><span class="p">))</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">os</span><span class="o">.</span><span class="n">fsync</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">manifest_path</span><span class="p">)</span>  <span class="c1"># atomic on POSIX</span>
+</code></pre></div>
+<p><strong>Why it matters</strong>: <code>os.replace()</code> is atomic on POSIX filesystems. Either the old manifest or the new one is visible — never a partial write. If crash occurs before replace, the old manifest is intact. If after, the new one is fully written and fsynced.</p>
+<p>On startup, the manifest is reconciled with what's actually on disk — orphan files are adopted, missing files are skipped.</p>
+<hr />
+<h2 id="summary-write-path-optimization-stack">Summary: Write-Path Optimization Stack<a class="headerlink" href="#summary-write-path-optimization-stack" title="Permanent link">&para;</a></h2>
+<p>The following table summarizes how each decision contributes to write throughput, ordered by impact:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Layer</th>
+<th>Optimization</th>
+<th>Effect on Writes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Level Architecture</strong></td>
+<td><strong>L0 multiple files / L1+ single file</strong></td>
+<td><strong>Flush is pure append — no merge-on-write</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Flush</strong></td>
+<td><strong>Parallel SSTable writes + ordered commits</strong></td>
+<td><strong>2x disk throughput on NVMe</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Compaction</strong></td>
+<td><strong>Subprocess execution (GIL bypass)</strong></td>
+<td><strong>Event loop stays free during merge</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td>API</td>
+<td>Single atomic write lock</td>
+<td>Minimal critical section; durability before visibility</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Memtable</td>
+<td>Concurrent skip list (lock-free reads)</td>
+<td>Writers don't contend with readers</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Freeze</td>
+<td>Backpressure queue (bounded depth)</td>
+<td>Prevents OOM; propagates disk pressure to callers</td>
+</tr>
+<tr>
+<td>7</td>
+<td>SSTable</td>
+<td>Four-file layout + async bloom/index writes</td>
+<td>Crash-safe; L0 finish() parallelizes I/O</td>
+</tr>
+<tr>
+<td>8</td>
+<td>WAL</td>
+<td>Msgpack framing + per-write fsync</td>
+<td>Compact, durable, corruption-detectable</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Compaction</td>
+<td>Level reservation (conflict-free parallel jobs)</td>
+<td>Non-adjacent compactions run simultaneously</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Bloom</td>
+<td>Data-derived sizing + env-aware FPR</td>
+<td>Optimal filter per SSTable; dev speed vs prod accuracy</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Cache</td>
+<td>Lazy loading + cross-reader reuse</td>
+<td>No I/O for unopened SSTables</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Cache</td>
+<td>Three-tier LRU (differential eviction)</td>
+<td>Bloom/index survive data block churn</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Config</td>
+<td>Runtime mutability (no restart)</td>
+<td>Live threshold tuning</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Recovery</td>
+<td>Seq-based WAL filtering</td>
+<td>Skip already-flushed entries</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Compaction</td>
+<td>AsyncRWLock with writer preference</td>
+<td>Compaction commits aren't starved</td>
+</tr>
+<tr>
+<td>16</td>
+<td>SSTable</td>
+<td>mmap + zero-copy block scanning</td>
+<td>Read optimization; no copy after page cache warm</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Manifest</td>
+<td>Atomic temp + os.replace</td>
+<td>Crash-safe state persistence</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-zoom.js"></script>
+      
+    
+  </body>
+</html>
