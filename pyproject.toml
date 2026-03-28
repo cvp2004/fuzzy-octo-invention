@@ -15,12 +15,23 @@ dependencies = [
     "websockets>=14.0",
 ]
 
+[project.scripts]
+lsm-kv = "app.cli:main"
+
+[build-system]
+requires = ["setuptools>=70.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*", "web*"]
+
 [dependency-groups]
 dev = [
     "bandit>=1.9.4",
     "basedpyright>=1.38.2",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.6",
+    "mkdocs-print-site-plugin>=2.5.0",
     "mkdocstrings[python]>=1.0.3",
     "mypy>=1.19.1",
     "poethepoet>=0.42.1",
@@ -137,6 +148,18 @@ sequence = [
 [tool.poe.tasks.docs]
 help = "Build documentation to site/ directory"
 cmd  = "mkdocs build --strict"
+
+[tool.poe.tasks.docs-pdf]
+help = "Generate PDF documentation to docs/pdf/"
+sequence = [
+    { cmd = "mkdocs build" },
+    { shell = "mkdir -p docs/pdf && '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=docs/pdf/lsm-kv-docs.pdf site/print_page/index.html" },
+]
+env  = { ENABLE_PRINT_SITE = "true" }
+
+[tool.poe.tasks.docs-deploy]
+help = "Deploy documentation to GitHub Pages"
+cmd  = "mkdocs gh-deploy --strict --force"
 
 [tool.poe.tasks.docs-serve]
 help = "Serve documentation locally with live reload"

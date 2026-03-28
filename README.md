@@ -26,6 +26,39 @@ uv sync                # install dependencies
 uv run poe start       # start the interactive REPL
 ```
 
+### Install as CLI
+
+Install the package to get the `lsm-kv` command:
+
+```bash
+pip install .          # production install
+# or
+uv pip install -e .    # editable / development install
+```
+
+Then use any of the three modes:
+
+```bash
+lsm-kv repl                        # interactive REPL
+lsm-kv api                         # REST API server on :8081
+lsm-kv api --port 9000 --reload    # API with custom port and auto-reload
+lsm-kv web                         # build frontend + start web dashboard
+lsm-kv web --skip-build            # web dashboard (reuse existing frontend build)
+```
+
+### Build a Distributable Package
+
+```bash
+uv build               # produces dist/lsm_kv-*.whl and .tar.gz
+```
+
+The resulting `.whl` file can be installed on any machine with Python 3.12+:
+
+```bash
+pip install dist/lsm_kv-0.1.0-py3-none-any.whl
+lsm-kv --help
+```
+
 ### As a Library
 
 ```python
@@ -176,4 +209,4 @@ All design docs include SVG architecture diagrams.
 | Quality | mypy (strict), basedpyright (strict), ruff, bandit |
 | Testing | pytest, pytest-asyncio |
 | Docs | MkDocs, mkdocstrings (Griffe), Material theme |
-| Packaging | uv, poethepoet |
+| Packaging | uv, poethepoet, setuptools |

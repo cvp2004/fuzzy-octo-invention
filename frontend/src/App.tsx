@@ -10,6 +10,7 @@ import LiveLogs from './pages/LiveLogs';
 import Config from './pages/Config';
 import Terminal from './pages/Terminal';
 import LoadGenerator from './pages/LoadGenerator';
+import EngineManager from './pages/EngineManager';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/load-generator" element={<LoadGenerator />} />
           <Route path="/terminal" element={<Terminal />} />
           <Route path="/config" element={<Config />} />
+          <Route path="/engine" element={<EngineManager />} />
         </Routes>
       </main>
     </div>

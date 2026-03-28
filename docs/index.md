@@ -13,6 +13,15 @@ A production-grade **Log-Structured Merge Tree** key-value store written in Pyth
 
 ## Quick Start
 
+```bash
+pip install .        # or: uv pip install -e .
+lsm-kv repl         # interactive REPL
+lsm-kv api          # REST API server on :8081
+lsm-kv web          # full web dashboard with React frontend
+```
+
+### As a Library
+
 ```python
 from app.engine import LSMEngine
 

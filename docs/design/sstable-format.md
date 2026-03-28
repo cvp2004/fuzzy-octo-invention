@@ -18,6 +18,8 @@ The presence of `meta.json` is the completeness signal. If it is missing, the SS
 
 ## Level Architecture
 
+![Architecture Diagram](images/sst_org_optimization_1.jpeg)
+
 ### L0 — Multiple Overlapping SSTables
 
 L0 holds up to `l0_compaction_threshold` (default: 10) SSTables simultaneously. Key ranges may overlap between files — two L0 SSTables can both contain the same key. Every `get()` must check all L0 files and return the result with the highest sequence number.

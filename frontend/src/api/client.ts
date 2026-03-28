@@ -26,6 +26,7 @@ function patch<T>(url: string, body: unknown): Promise<T> {
 export const getEngineStatus = () => json<any>(`${BASE}/engine/status`);
 export const postEngineOpen = () => post<any>(`${BASE}/engine/open`);
 export const postEngineClose = () => post<any>(`${BASE}/engine/close`);
+export const postEngineReset = () => post<any>(`${BASE}/engine/reset`);
 
 // KV
 export const kvPut = (key: string, value: string) =>

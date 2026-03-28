@@ -26,6 +26,16 @@ theme:
 
 plugins:
   - search
+  - print-site:
+      enabled: !ENV [ENABLE_PRINT_SITE, false]
+      add_cover_page: true
+      cover_page_template: ""
+      add_table_of_contents: true
+      toc_title: "Table of Contents"
+      toc_depth: 3
+      enumerate_headings: false
+      enumerate_figures: false
+      print_page_title: "lsm-kv Documentation"
   - mkdocstrings:
       handlers:
         python:
@@ -86,6 +96,8 @@ nav:
     - Flush Pipeline: internals/flush.md
     - Observability: internals/observability.md
   - Design Docs:
+    - LSM Trees vs B+ Trees: design/lsm-vs-btree.md
+    - vs LevelDB & RocksDB: design/comparison-leveldb-rocksdb.md
     - Architecture: design/architecture.md
     - Write Optimizations: design/write-optimizations.md
     - Read & Write Flow: design/read-write-flow.md

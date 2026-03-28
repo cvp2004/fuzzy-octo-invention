@@ -13,6 +13,7 @@ const links = [
   { to: '/load-generator', label: 'Load Generator' },
   { to: '/terminal', label: 'Terminal' },
   { to: '/config', label: 'Config' },
+  { to: '/engine', label: 'Engine Manager' },
 ];
 
 export default function Sidebar() {

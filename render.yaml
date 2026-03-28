@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: lsm-kv
+    runtime: python
+    plan: free
+    buildCommand: |
+      pip install uv &&
+      uv sync --frozen --group dev &&
+      npm --prefix frontend install &&
+      npm --prefix frontend run build &&
+      uv run mkdocs build
+    startCommand: uv run uvicorn web.server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: NODE_VERSION
+        value: "20"

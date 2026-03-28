@@ -97,6 +97,15 @@ app.include_router(terminal.router, prefix="/api/v1/terminal", tags=["terminal"]
 app.include_router(logs.router)
 
 # ---------------------------------------------------------------------------
+# Serve MkDocs documentation from site/ at /docs
+# ---------------------------------------------------------------------------
+
+_docs_dir = Path(__file__).resolve().parent.parent / "site"
+
+if _docs_dir.exists():
+    app.mount("/docs", StaticFiles(directory=_docs_dir, html=True), name="docs")
+
+# ---------------------------------------------------------------------------
 # Serve React SPA from frontend/dist (must be AFTER API routers)
 # ---------------------------------------------------------------------------
 
