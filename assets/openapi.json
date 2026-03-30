@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "lsm-kv Explorer",
+    "title": "kiwi-db Explorer",
     "description": "REST API for an educational Log-Structured Merge Tree (LSM-Tree) key-value store. Provides endpoints for key-value operations, engine lifecycle management, memtable and SSTable inspection, compaction control, configuration, real-time statistics, and an interactive terminal.",
     "version": "1.0.0"
   },
@@ -857,7 +857,7 @@
           "terminal"
         ],
         "summary": "Execute a REPL command",
-        "description": "Execute an lsm-kv REPL command and return text output.\n\nSupported commands: `put`, `get`, `del`, `flush`, `mem`, `disk`,\n`stats`, `config`, `config set`, `trace`, `help`, `clear`.",
+        "description": "Execute an kiwi-db REPL command and return text output.\n\nSupported commands: `put`, `get`, `del`, `flush`, `mem`, `disk`,\n`stats`, `config`, `config set`, `trace`, `help`, `clear`.",
         "operationId": "terminal_run_api_v1_terminal_run_post",
         "requestBody": {
           "content": {
@@ -1044,7 +1044,7 @@
           "command"
         ],
         "title": "CommandRequest",
-        "description": "An lsm-kv REPL command to execute."
+        "description": "An kiwi-db REPL command to execute."
       },
       "CommandResponse": {
         "properties": {
@@ -1065,7 +1065,7 @@
           "output"
         ],
         "title": "CommandResponse",
-        "description": "Text output from an lsm-kv REPL command."
+        "description": "Text output from an kiwi-db REPL command."
       },
       "CompactionHistoryResponse": {
         "properties": {
@@ -1865,7 +1865,7 @@
     },
     {
       "name": "terminal",
-      "description": "Interactive REPL \u2014 execute lsm-kv commands (put, get, del, flush, etc.) and get text output."
+      "description": "Interactive REPL \u2014 execute kiwi-db commands (put, get, del, flush, etc.) and get text output."
     }
   ]
 }

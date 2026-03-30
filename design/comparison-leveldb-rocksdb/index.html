@@ -25,7 +25,7 @@
     
     
       
-        <title>vs LevelDB & RocksDB - lsm-kv Documentation</title>
+        <title>vs LevelDB & RocksDB - kiwi-db Documentation</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#lsm-kv-vs-leveldb-vs-rocksdb" class="md-skip">
+        <a href="#kiwi-db-vs-leveldb-vs-rocksdb" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="lsm-kv Documentation" class="md-header__button md-logo" aria-label="lsm-kv Documentation" data-md-component="logo">
+    <a href="../.." title="kiwi-db Documentation" class="md-header__button md-logo" aria-label="kiwi-db Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,7 +110,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            lsm-kv Documentation
+            kiwi-db Documentation
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -196,7 +196,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/your-org/lsm-kv" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/cvp2004/kiwi-db" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
@@ -232,17 +232,17 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="lsm-kv Documentation" class="md-nav__button md-logo" aria-label="lsm-kv Documentation" data-md-component="logo">
+    <a href="../.." title="kiwi-db Documentation" class="md-nav__button md-logo" aria-label="kiwi-db Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    lsm-kv Documentation
+    kiwi-db Documentation
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/your-org/lsm-kv" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/cvp2004/kiwi-db" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
@@ -1011,15 +1011,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-lsm-kv-is-better" class="md-nav__link">
+  <a href="#where-kiwi-db-is-better" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where lsm-kv is Better
+        Where kiwi-db is Better
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Where lsm-kv is Better">
+    <nav class="md-nav" aria-label="Where kiwi-db is Better">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1138,15 +1138,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-lsm-kv-is-lacking-honest-assessment" class="md-nav__link">
+  <a href="#where-kiwi-db-is-lacking-honest-assessment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where lsm-kv is Lacking (Honest Assessment)
+        Where kiwi-db is Lacking (Honest Assessment)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Where lsm-kv is Lacking (Honest Assessment)">
+    <nav class="md-nav" aria-label="Where kiwi-db is Lacking (Honest Assessment)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1627,15 +1627,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-lsm-kv-is-better" class="md-nav__link">
+  <a href="#where-kiwi-db-is-better" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where lsm-kv is Better
+        Where kiwi-db is Better
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Where lsm-kv is Better">
+    <nav class="md-nav" aria-label="Where kiwi-db is Better">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1754,15 +1754,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-lsm-kv-is-lacking-honest-assessment" class="md-nav__link">
+  <a href="#where-kiwi-db-is-lacking-honest-assessment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where lsm-kv is Lacking (Honest Assessment)
+        Where kiwi-db is Lacking (Honest Assessment)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Where lsm-kv is Lacking (Honest Assessment)">
+    <nav class="md-nav" aria-label="Where kiwi-db is Lacking (Honest Assessment)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1845,14 +1845,14 @@
   
 
 
-<h1 id="lsm-kv-vs-leveldb-vs-rocksdb">lsm-kv vs LevelDB vs RocksDB<a class="headerlink" href="#lsm-kv-vs-leveldb-vs-rocksdb" title="Permanent link">&para;</a></h1>
-<p>This document provides a structured comparison for project evaluators, highlighting where lsm-kv introduces novel design choices that improve upon classical LSM implementations, and where it intentionally trades breadth for depth.</p>
+<h1 id="kiwi-db-vs-leveldb-vs-rocksdb">kiwi-db vs LevelDB vs RocksDB<a class="headerlink" href="#kiwi-db-vs-leveldb-vs-rocksdb" title="Permanent link">&para;</a></h1>
+<p>This document provides a structured comparison for project evaluators, highlighting where kiwi-db introduces novel design choices that improve upon classical LSM implementations, and where it intentionally trades breadth for depth.</p>
 <hr />
 <h2 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
-<p>lsm-kv is not a production replacement for RocksDB — it is a <strong>teaching and demonstration engine</strong> that implements the core LSM architecture from scratch in Python 3.12+ with several design innovations that go beyond what LevelDB and RocksDB do in specific areas. It trades feature breadth (no range queries, no compression, no transactions) for implementation depth (formal contracts, exhaustive documentation, dual type checking, async-first API, interactive web dashboard).</p>
-<p><strong>The evaluator pitch</strong>: lsm-kv implements the same fundamental algorithms as LevelDB/RocksDB but makes them <strong>observable, type-safe, and async-native</strong> — three properties that production C++ engines sacrifice for raw performance.</p>
+<p>kiwi-db is not a production replacement for RocksDB — it is a <strong>teaching and demonstration engine</strong> that implements the core LSM architecture from scratch in Python 3.12+ with several design innovations that go beyond what LevelDB and RocksDB do in specific areas. It trades feature breadth (no range queries, no compression, no transactions) for implementation depth (formal contracts, exhaustive documentation, dual type checking, async-first API, interactive web dashboard).</p>
+<p><strong>The evaluator pitch</strong>: kiwi-db implements the same fundamental algorithms as LevelDB/RocksDB but makes them <strong>observable, type-safe, and async-native</strong> — three properties that production C++ engines sacrifice for raw performance.</p>
 <hr />
-<h2 id="where-lsm-kv-is-better">Where lsm-kv is Better<a class="headerlink" href="#where-lsm-kv-is-better" title="Permanent link">&para;</a></h2>
+<h2 id="where-kiwi-db-is-better">Where kiwi-db is Better<a class="headerlink" href="#where-kiwi-db-is-better" title="Permanent link">&para;</a></h2>
 <h3 id="1-async-first-api-neither-leveldb-nor-rocksdb-has-this">1. Async-First API (Neither LevelDB nor RocksDB has this)<a class="headerlink" href="#1-async-first-api-neither-leveldb-nor-rocksdb-has-this" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1864,7 +1864,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td><code>async def put/get/delete/flush/close</code></td>
 <td>Native asyncio — no thread pool wrapper needed</td>
 </tr>
@@ -1880,7 +1880,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: Modern Python applications (FastAPI, aiohttp) run on asyncio event loops. LevelDB and RocksDB block the calling thread on every operation. lsm-kv's WAL fsync, SSTable flush, and compaction all run off the event loop via <code>asyncio.to_thread()</code> and <code>ProcessPoolExecutor</code> — the event loop never blocks.</p>
+<p><strong>Why this matters</strong>: Modern Python applications (FastAPI, aiohttp) run on asyncio event loops. LevelDB and RocksDB block the calling thread on every operation. kiwi-db's WAL fsync, SSTable flush, and compaction all run off the event loop via <code>asyncio.to_thread()</code> and <code>ProcessPoolExecutor</code> — the event loop never blocks.</p>
 <p><strong>Evaluator talking point</strong>: "Our engine is natively async. You can call <code>await engine.put()</code> inside a FastAPI handler without blocking other requests. LevelDB and RocksDB require a thread pool wrapper to achieve this."</p>
 <hr />
 <h3 id="2-hybrid-compaction-strategy-l0-tiering-l1-leveling">2. Hybrid Compaction Strategy (L0 Tiering + L1+ Leveling)<a class="headerlink" href="#2-hybrid-compaction-strategy-l0-tiering-l1-leveling" title="Permanent link">&para;</a></h3>
@@ -1895,7 +1895,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td>Tiering (multiple files, overlapping)</td>
 <td>Leveling (1 file per level)</td>
 <td>O(N) — append only</td>
@@ -1914,13 +1914,13 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: LevelDB merges every flush into the existing L0 sorted run — the write path pays O(T × L / B) per entry. lsm-kv's L0 tiering eliminates this: flush is a pure sequential write with no merge. Read cost increases slightly (check all L0 files) but is bounded by <code>l0_compaction_threshold</code> and mitigated by per-file bloom filters.</p>
+<p><strong>Why this matters</strong>: LevelDB merges every flush into the existing L0 sorted run — the write path pays O(T × L / B) per entry. kiwi-db's L0 tiering eliminates this: flush is a pure sequential write with no merge. Read cost increases slightly (check all L0 files) but is bounded by <code>l0_compaction_threshold</code> and mitigated by per-file bloom filters.</p>
 <p><strong>Formal complexity</strong>:</p>
 <table>
 <thead>
 <tr>
 <th>Metric</th>
-<th>lsm-kv (hybrid)</th>
+<th>kiwi-db (hybrid)</th>
 <th>LevelDB (pure leveling)</th>
 <th>Improvement</th>
 </tr>
@@ -1959,7 +1959,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td><code>ProcessPoolExecutor</code> subprocess — own GIL, own memory</td>
 <td><strong>Zero</strong> — event loop free, writes unblocked</td>
 </tr>
@@ -1975,7 +1975,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: CPython 3.12 has the GIL. A background compaction thread competing with the write path for GIL time slices would degrade write throughput. By running compaction in a subprocess with its own GIL, lsm-kv achieves true parallelism — the merge runs at full CPU speed while the main process continues accepting writes.</p>
+<p><strong>Why this matters</strong>: CPython 3.12 has the GIL. A background compaction thread competing with the write path for GIL time slices would degrade write throughput. By running compaction in a subprocess with its own GIL, kiwi-db achieves true parallelism — the merge runs at full CPU speed while the main process continues accepting writes.</p>
 <p><strong>Evaluator talking point</strong>: "We bypass Python's GIL limitation by running compaction in a separate process. This is a design choice that C++ engines don't need — but for a Python engine, it's the only way to achieve true write-path isolation from compaction."</p>
 <hr />
 <h3 id="4-parallel-flush-pipeline-with-event-chain-ordering">4. Parallel Flush Pipeline with Event-Chain Ordering<a class="headerlink" href="#4-parallel-flush-pipeline-with-event-chain-ordering" title="Permanent link">&para;</a></h3>
@@ -1989,7 +1989,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td>Parallel writes (semaphore-bounded, default 2) + serialized commits (asyncio.Event chain)</td>
 <td>Guaranteed FIFO via event chain</td>
 </tr>
@@ -2005,7 +2005,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: LevelDB flushes one memtable at a time. lsm-kv writes multiple SSTables in parallel (bounded by <code>flush_max_workers</code>) while ensuring commits happen in oldest-first order via an <code>asyncio.Event</code> chain. This doubles disk throughput on NVMe without sacrificing correctness.</p>
+<p><strong>Why this matters</strong>: LevelDB flushes one memtable at a time. kiwi-db writes multiple SSTables in parallel (bounded by <code>flush_max_workers</code>) while ensuring commits happen in oldest-first order via an <code>asyncio.Event</code> chain. This doubles disk throughput on NVMe without sacrificing correctness.</p>
 <p><strong>Evaluator talking point</strong>: "Our flush pipeline writes multiple SSTables in parallel — 2× throughput on NVMe compared to LevelDB's sequential approach — while maintaining strict FIFO ordering via an event chain, not a global lock."</p>
 <hr />
 <h3 id="5-concurrent-skip-list-with-lock-free-reads">5. Concurrent Skip List with Lock-Free Reads<a class="headerlink" href="#5-concurrent-skip-list-with-lock-free-reads" title="Permanent link">&para;</a></h3>
@@ -2020,7 +2020,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td>Skip list with per-node locks</td>
 <td>Fine-grained (disjoint keys don't contend)</td>
 <td><strong>Lock-free</strong> (GIL-atomic boolean flags)</td>
@@ -2039,8 +2039,8 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: LevelDB's skip list uses a global mutex — all writes are serialized, and reads block during writes. lsm-kv's per-node locking allows concurrent writes to disjoint key ranges, and readers acquire zero locks (they check <code>fully_linked</code> and <code>marked</code> flags that are atomic under CPython's GIL).</p>
-<p>RocksDB's CAS-based skip list is more sophisticated — truly lock-free for both reads and writes. lsm-kv's approach is a middle ground: per-node locks for writes (simpler than CAS), lock-free for reads (same as RocksDB).</p>
+<p><strong>Why this matters</strong>: LevelDB's skip list uses a global mutex — all writes are serialized, and reads block during writes. kiwi-db's per-node locking allows concurrent writes to disjoint key ranges, and readers acquire zero locks (they check <code>fully_linked</code> and <code>marked</code> flags that are atomic under CPython's GIL).</p>
+<p>RocksDB's CAS-based skip list is more sophisticated — truly lock-free for both reads and writes. kiwi-db's approach is a middle ground: per-node locks for writes (simpler than CAS), lock-free for reads (same as RocksDB).</p>
 <p><strong>Evaluator talking point</strong>: "Our skip list allows concurrent writes to non-overlapping keys via per-node locking, and reads are completely lock-free — an improvement over LevelDB's global mutex, implemented without the complexity of RocksDB's CAS atomics."</p>
 <hr />
 <h3 id="6-data-derived-bloom-filter-sizing">6. Data-Derived Bloom Filter Sizing<a class="headerlink" href="#6-data-derived-bloom-filter-sizing" title="Permanent link">&para;</a></h3>
@@ -2054,7 +2054,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td><strong>Actual record count</strong> at flush/compaction time</td>
 <td>Per-environment: 5% dev, 1% prod</td>
 </tr>
@@ -2070,7 +2070,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: LevelDB and RocksDB use a fixed bits-per-key ratio. If you set 10 bits/key for a table with 1M entries, you get a 1% FPR. But if you set 10 bits/key for a table with 100 entries, you waste 99.99% of the filter. lsm-kv derives <code>bloom_n</code> from the actual data count, producing an optimally sized filter every time.</p>
+<p><strong>Why this matters</strong>: LevelDB and RocksDB use a fixed bits-per-key ratio. If you set 10 bits/key for a table with 1M entries, you get a 1% FPR. But if you set 10 bits/key for a table with 100 entries, you waste 99.99% of the filter. kiwi-db derives <code>bloom_n</code> from the actual data count, producing an optimally sized filter every time.</p>
 <p><strong>Evaluator talking point</strong>: "Our bloom filters are sized to the exact record count — not a fixed bits-per-key guess. This means every SSTable gets an optimally sized filter, and we can trade FPR between dev (5% for speed) and prod (1% for accuracy) via a single config change."</p>
 <hr />
 <h3 id="7-runtime-mutable-configuration">7. Runtime-Mutable Configuration<a class="headerlink" href="#7-runtime-mutable-configuration" title="Permanent link">&para;</a></h3>
@@ -2084,7 +2084,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td>All thresholds mutable at runtime via <code>update_config()</code></td>
 <td><strong>No</strong></td>
 </tr>
@@ -2100,7 +2100,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: lsm-kv reads config values at the point of use (not cached). Changing <code>max_memtable_entries</code> takes effect on the next <code>put()</code>. Switching from dev to prod mode (<code>config.set("env", "prod")</code>) changes bloom FPR, freeze thresholds, and compaction scaling simultaneously — no restart.</p>
+<p><strong>Why this matters</strong>: kiwi-db reads config values at the point of use (not cached). Changing <code>max_memtable_entries</code> takes effect on the next <code>put()</code>. Switching from dev to prod mode (<code>config.set("env", "prod")</code>) changes bloom FPR, freeze thresholds, and compaction scaling simultaneously — no restart.</p>
 <hr />
 <h3 id="8-formal-type-safety-and-contracts">8. Formal Type Safety and Contracts<a class="headerlink" href="#8-formal-type-safety-and-contracts" title="Permanent link">&para;</a></h3>
 <table>
@@ -2114,7 +2114,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td>mypy strict + basedpyright strict (dual)</td>
 <td>ABCs (StorageEngine, Serializable, MemTable) + Protocols</td>
 <td>.pyi files for public API</td>
@@ -2133,7 +2133,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: lsm-kv runs two independent type checkers in strict mode on every CI check. It defines formal contracts via ABCs (what you must implement) and Protocols (what shape is accepted). Public API has <code>.pyi</code> stub files for IDE autocompletion.</p>
+<p><strong>Why this matters</strong>: kiwi-db runs two independent type checkers in strict mode on every CI check. It defines formal contracts via ABCs (what you must implement) and Protocols (what shape is accepted). Public API has <code>.pyi</code> stub files for IDE autocompletion.</p>
 <hr />
 <h3 id="9-interactive-web-dashboard">9. Interactive Web Dashboard<a class="headerlink" href="#9-interactive-web-dashboard" title="Permanent link">&para;</a></h3>
 <table>
@@ -2146,7 +2146,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td>FastAPI + React web dashboard with 10 pages</td>
 <td>Live log streaming via WebSocket, SSTable browser, memtable viewer</td>
 </tr>
@@ -2162,7 +2162,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Why this matters</strong>: lsm-kv includes a built-in web dashboard at <code>localhost:8081</code> where you can:
+<p><strong>Why this matters</strong>: kiwi-db includes a built-in web dashboard at <code>localhost:8081</code> where you can:
 - Browse SSTables by level with record counts and key ranges
 - Watch memtable fill up and freeze in real time
 - Monitor compaction jobs and level reservations
@@ -2181,7 +2181,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>lsm-kv</strong></td>
+<td><strong>kiwi-db</strong></td>
 <td>MkDocs site with autodoc API reference, 15+ design docs, SVG diagrams, formal complexity analysis</td>
 <td>Every design decision documented with problem/decision/alternative/impact</td>
 </tr>
@@ -2198,7 +2198,7 @@
 </tbody>
 </table>
 <hr />
-<h2 id="where-lsm-kv-is-lacking-honest-assessment">Where lsm-kv is Lacking (Honest Assessment)<a class="headerlink" href="#where-lsm-kv-is-lacking-honest-assessment" title="Permanent link">&para;</a></h2>
+<h2 id="where-kiwi-db-is-lacking-honest-assessment">Where kiwi-db is Lacking (Honest Assessment)<a class="headerlink" href="#where-kiwi-db-is-lacking-honest-assessment" title="Permanent link">&para;</a></h2>
 <p>These are deliberate scope choices, not deficiencies. Each is documented here so evaluators understand the tradeoff.</p>
 <h3 id="feature-gaps">Feature Gaps<a class="headerlink" href="#feature-gaps" title="Permanent link">&para;</a></h3>
 <table>
@@ -2207,7 +2207,7 @@
 <th>Feature</th>
 <th>LevelDB</th>
 <th>RocksDB</th>
-<th>lsm-kv</th>
+<th>kiwi-db</th>
 <th>Why Omitted</th>
 </tr>
 </thead>
@@ -2276,7 +2276,7 @@
 <tr>
 <th>Dimension</th>
 <th>LevelDB/RocksDB</th>
-<th>lsm-kv</th>
+<th>kiwi-db</th>
 <th>Gap</th>
 </tr>
 </thead>
@@ -2319,7 +2319,7 @@
 <tr>
 <th>Dimension</th>
 <th>LevelDB/RocksDB</th>
-<th>lsm-kv</th>
+<th>kiwi-db</th>
 </tr>
 </thead>
 <tbody>
@@ -2353,7 +2353,7 @@
 <hr />
 <h2 id="the-evaluator-pitch">The Evaluator Pitch<a class="headerlink" href="#the-evaluator-pitch" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p>"lsm-kv implements the same core LSM-Tree algorithms as LevelDB and RocksDB — WAL, memtable, SSTable, bloom filters, leveled compaction — but goes further in three dimensions that production C++ engines don't prioritize:</p>
+<p>"kiwi-db implements the same core LSM-Tree algorithms as LevelDB and RocksDB — WAL, memtable, SSTable, bloom filters, leveled compaction — but goes further in three dimensions that production C++ engines don't prioritize:</p>
 <ol>
 <li>
 <p><strong>Async-native</strong>: Every operation is natively async. The event loop never blocks — WAL fsync, flush, and compaction all run off the main thread. Neither LevelDB nor RocksDB offers this.</p>
@@ -2373,7 +2373,7 @@
 <thead>
 <tr>
 <th>Dimension</th>
-<th>lsm-kv</th>
+<th>kiwi-db</th>
 <th>LevelDB</th>
 <th>RocksDB</th>
 </tr>
