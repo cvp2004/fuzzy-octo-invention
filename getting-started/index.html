@@ -14,7 +14,7 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="../api/engine/">
+        <link rel="next" href="../api/rest/">
       
       
         
@@ -357,6 +357,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-source-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Source (development)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-wheel-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Wheel (production)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -376,6 +404,28 @@
     <span class="md-ellipsis">
       
         REPL Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-explorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web Explorer
       
     </span>
   </a>
@@ -470,6 +520,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1447,6 +1525,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-source-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Source (development)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-wheel-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Wheel (production)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1466,6 +1572,28 @@
     <span class="md-ellipsis">
       
         REPL Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-explorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web Explorer
       
     </span>
   </a>
@@ -1521,45 +1649,70 @@
 
 <h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>sync
+<h3 id="from-source-development">From Source (development)<a class="headerlink" href="#from-source-development" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>sync<span class="w">                </span><span class="c1"># install dependencies into virtual environment</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w">    </span><span class="c1"># install lsm-kv CLI in editable mode</span>
+</code></pre></div>
+<h3 id="from-wheel-production">From Wheel (production)<a class="headerlink" href="#from-wheel-production" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>build<span class="w">                                        </span><span class="c1"># build the package</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>pip<span class="w"> </span>install<span class="w"> </span>dist/lsm_kv-0.1.0-py3-none-any.whl<span class="w">  </span><span class="c1"># install anywhere</span>
 </code></pre></div>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<h3 id="repl-mode">REPL Mode<a class="headerlink" href="#repl-mode" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>main.py
+<p>The <code>lsm-kv</code> CLI provides three modes — REPL, API, and Web — each started with a separate subcommand:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>lsm-kv<span class="w"> </span>--help
 </code></pre></div>
-<p>Available commands: <code>put</code>, <code>get</code>, <code>del</code>, <code>flush</code>, <code>mem</code>, <code>disk</code>, <code>stats</code>, <code>config</code>, <code>help</code>.</p>
+<h3 id="repl-mode">REPL Mode<a class="headerlink" href="#repl-mode" title="Permanent link">&para;</a></h3>
+<p>Start an interactive shell to read/write keys, inspect memtables and SSTables, and trace lookups:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>lsm-kv<span class="w"> </span>repl
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># or without installing the CLI:</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>main.py
+</code></pre></div>
+<p>Available commands: <code>put</code>, <code>get</code>, <code>del</code>, <code>flush</code>, <code>mem</code>, <code>disk</code>, <code>stats</code>, <code>config</code>, <code>trace</code>, <code>help</code>.</p>
+<h3 id="api-mode">API Mode<a class="headerlink" href="#api-mode" title="Permanent link">&para;</a></h3>
+<p>Start only the FastAPI REST server (no frontend):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>lsm-kv<span class="w"> </span>api<span class="w">                         </span><span class="c1"># default: 0.0.0.0:8081</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>lsm-kv<span class="w"> </span>api<span class="w"> </span>--port<span class="w"> </span><span class="m">9000</span><span class="w"> </span>--reload<span class="w">    </span><span class="c1"># custom port with auto-reload</span>
+</code></pre></div>
+<p>API endpoints are served under <code>/api/v1/</code> — KV operations, memtable/SSTable inspection, compaction control, stats, config, and a terminal interface.</p>
+<h3 id="web-explorer">Web Explorer<a class="headerlink" href="#web-explorer" title="Permanent link">&para;</a></h3>
+<p>Build the React frontend and start the full web dashboard:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>lsm-kv<span class="w"> </span>web<span class="w">                   </span><span class="c1"># builds frontend then starts server on :8081</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>lsm-kv<span class="w"> </span>web<span class="w"> </span>--skip-build<span class="w">      </span><span class="c1"># reuse existing frontend/dist/</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>lsm-kv<span class="w"> </span>web<span class="w"> </span>--port<span class="w"> </span><span class="m">3000</span><span class="w">       </span><span class="c1"># custom port</span>
+</code></pre></div>
+<p>Open <code>http://localhost:8081</code> for the interactive dashboard with KV explorer, memtable viewer, SSTable browser, compaction monitor, live log streaming, and web terminal.</p>
 <h3 id="as-a-library">As a Library<a class="headerlink" href="#as-a-library" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">app.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">LSMEngine</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="k">await</span> <span class="n">LSMEngine</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;./data&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="c1"># Write</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;user:1&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;Alice&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="c1"># Read</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">value</span> <span class="o">=</span> <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;user:1&quot;</span><span class="p">)</span>  <span class="c1"># b&quot;Alice&quot;</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="c1"># Delete</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;user:1&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="c1"># Force flush memtable to SSTable</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    <span class="c1"># Inspect</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">stats</span><span class="p">())</span>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    <span class="c1"># Shutdown</span>
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">app.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">LSMEngine</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="k">await</span> <span class="n">LSMEngine</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;./data&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="c1"># Write</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;user:1&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;Alice&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="c1"># Read</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="n">value</span> <span class="o">=</span> <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;user:1&quot;</span><span class="p">)</span>  <span class="c1"># b&quot;Alice&quot;</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="c1"># Delete</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;user:1&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    <span class="c1"># Force flush memtable to SSTable</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>    <span class="c1"># Inspect</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">stats</span><span class="p">())</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>    <span class="c1"># Shutdown</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>    <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
 <h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">engine</span> <span class="o">=</span> <span class="k">await</span> <span class="n">LSMEngine</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;./data&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Read config</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_memtable_entries</span><span class="p">)</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Update at runtime</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">update_config</span><span class="p">(</span><span class="s2">&quot;max_memtable_entries&quot;</span><span class="p">,</span> <span class="mi">500_000</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">engine</span> <span class="o">=</span> <span class="k">await</span> <span class="n">LSMEngine</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;./data&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># Read config</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_memtable_entries</span><span class="p">)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1"># Update at runtime</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">update_config</span><span class="p">(</span><span class="s2">&quot;max_memtable_entries&quot;</span><span class="p">,</span> <span class="mi">500_000</span><span class="p">)</span>
 </code></pre></div>
 <p>See <a href="../api/config/"><code>LSMConfig</code></a> for all available settings.</p>
 
