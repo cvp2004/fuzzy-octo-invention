@@ -199,6 +199,10 @@ The docs site (MkDocs + Material theme) includes:
 
 All design docs include SVG architecture diagrams.
 
+## About
+
+This project is developed as a **Bachelor of Engineering (B.E.) Final Year Project**. It demonstrates the design and implementation of a complete storage engine from scratch, covering core database internals — write-ahead logging, memtable management, SSTable persistence, compaction, and bloom filters — with a focus on correctness, observability, and async-first architecture.
+
 ## Tech Stack
 
 | Category | Tools |
