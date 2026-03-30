@@ -1,4 +1,4 @@
-"""LSMEngine — central entry point for the lsm-kv key-value store.
+"""LSMEngine — central entry point for the kiwidb key-value store.
 
 Coordinates all managers (WAL, MemTable, SSTable) and exposes the
 public ``put`` / ``get`` / ``delete`` interface.  The write path is
@@ -69,7 +69,7 @@ class EngineStats:
 
 
 class LSMEngine(StorageEngine):
-    """Central entry point for the lsm-kv key-value store.
+    """Central entry point for the kiwidb key-value store.
 
     Use the :meth:`open` classmethod to create an instance — never
     call ``__init__`` directly.
@@ -128,7 +128,7 @@ class LSMEngine(StorageEngine):
         logger.info(
             "Startup started",
             data_root=str(engine._data_root),
-            log_file=str(engine._data_root / "logs" / "lsm-kv.log"),
+            log_file=str(engine._data_root / "logs" / "kiwidb.log"),
             log_port=log_port,
         )
 

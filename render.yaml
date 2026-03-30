@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: lsm-kv
+    name: kiwidb
     runtime: python
     plan: free
     buildCommand: |

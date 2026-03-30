@@ -8,7 +8,7 @@ interface HistoryEntry {
   ts: number;
 }
 
-const WELCOME = `lsm-kv Explorer Terminal
+const WELCOME = `kiwidb Explorer Terminal
 type 'help' to list commands
 `;
 
@@ -132,7 +132,7 @@ export default function Terminal() {
           <div key={i} className="mb-2">
             {/* Command line */}
             <div className="flex">
-              <span className="text-accent-green font-bold mr-1">lsm-kv{'>'}</span>
+              <span className="text-accent-green font-bold mr-1">kiwidb{'>'}</span>
               <span className="text-white">{entry.command}</span>
             </div>
             {/* Output */}
@@ -150,7 +150,7 @@ export default function Terminal() {
 
         {/* Current input line */}
         <div className="flex items-center">
-          <span className="text-accent-green font-bold mr-1">lsm-kv{'>'}</span>
+          <span className="text-accent-green font-bold mr-1">kiwidb{'>'}</span>
           <input
             ref={inputRef}
             type="text"

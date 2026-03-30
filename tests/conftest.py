@@ -1,4 +1,4 @@
-"""Shared test fixtures for lsm-kv."""
+"""Shared test fixtures for kiwidb."""
 
 from __future__ import annotations
 

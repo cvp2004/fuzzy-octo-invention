@@ -1,4 +1,4 @@
-"""Common utilities shared across the lsm-kv library.
+"""Common utilities shared across the kiwidb library.
 
 Submodules:
 

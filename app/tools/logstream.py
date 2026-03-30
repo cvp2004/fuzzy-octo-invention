@@ -1,4 +1,4 @@
-"""Live log stream client — connects to the lsm-kv log broadcast server.
+"""Live log stream client — connects to the kiwidb log broadcast server.
 
 Usage:
     python -m app.tools.logstream              # default: 127.0.0.1:9009
@@ -23,7 +23,7 @@ def main(host: str = "127.0.0.1", port: int = 9009) -> None:
         sock.connect((host, port))
     except ConnectionRefusedError:
         print(
-            f"Connection refused — is lsm-kv running with log server on port {port}?",
+            f"Connection refused — is kiwidb running with log server on port {port}?",
             file=sys.stderr,
         )
         sys.exit(1)

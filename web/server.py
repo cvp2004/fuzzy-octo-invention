@@ -74,7 +74,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 # ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title="lsm-kv Explorer",
+    title="kiwidb Explorer",
     description=(
         "REST API for an educational Log-Structured Merge Tree (LSM-Tree) "
         "key-value store. Provides endpoints for key-value operations, engine "
@@ -115,7 +115,7 @@ app = FastAPI(
         },
         {
             "name": "terminal",
-            "description": "Interactive REPL — execute lsm-kv commands (put, get, del, flush, etc.) and get text output.",
+            "description": "Interactive REPL — execute kiwidb commands (put, get, del, flush, etc.) and get text output.",
         },
     ],
     lifespan=lifespan,

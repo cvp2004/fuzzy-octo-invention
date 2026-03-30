@@ -32,7 +32,7 @@ export default function Sidebar() {
     <aside className="w-60 bg-navy-800 border-r border-navy-600 flex flex-col shrink-0">
       <div className="p-4 border-b border-navy-600">
         <h1 className="font-mono text-lg font-bold text-white tracking-tight">
-          lsm-kv
+          kiwidb
         </h1>
         <span className="text-xs text-gray-500 font-mono">Explorer</span>
       </div>

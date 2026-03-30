@@ -1,4 +1,4 @@
-# app/cli.py — Unified CLI entry point for lsm-kv
+# app/cli.py — Unified CLI entry point for kiwidb
 from __future__ import annotations
 
 import argparse
@@ -9,9 +9,9 @@ from pathlib import Path
 
 
 def main() -> None:
-    """CLI dispatcher: lsm-kv {repl,api,web}."""
+    """CLI dispatcher: kiwidb {repl,api,web}."""
     parser = argparse.ArgumentParser(
-        prog="lsm-kv",
+        prog="kiwidb",
         description="Production-grade LSM-tree Key-Value Store",
     )
     sub = parser.add_subparsers(dest="command")

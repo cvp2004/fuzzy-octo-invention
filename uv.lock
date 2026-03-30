@@ -365,7 +365,7 @@ wheels = [
 ]
 
 [[package]]
-name = "lsm-kv"
+name = "kiwidb"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

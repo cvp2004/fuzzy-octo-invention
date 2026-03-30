@@ -1,5 +1,5 @@
 [project]
-name = "lsm-kv"
+name = "kiwidb"
 version = "0.1.0"
 description = "Production-grade Log-Structured Merge Tree Key-Value Store library"
 readme = "README.md"
@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-lsm-kv = "app.cli:main"
+kiwidb = "app.cli:main"
 
 [build-system]
 requires = ["setuptools>=70.0"]
@@ -153,7 +153,7 @@ cmd  = "mkdocs build --strict"
 help = "Generate PDF documentation to docs/pdf/"
 sequence = [
     { cmd = "mkdocs build" },
-    { shell = "mkdir -p docs/pdf && '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=docs/pdf/lsm-kv-docs.pdf site/print_page/index.html" },
+    { shell = "mkdir -p docs/pdf && '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=docs/pdf/kiwidb-docs.pdf site/print_page/index.html" },
 ]
 env  = { ENABLE_PRINT_SITE = "true" }
 

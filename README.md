@@ -28,7 +28,7 @@ uv run poe start       # start the interactive REPL
 
 ### Install as CLI
 
-Install the package to get the `lsm-kv` command:
+Install the package to get the `kiwidb` command:
 
 ```bash
 pip install .          # production install
@@ -39,11 +39,11 @@ uv pip install -e .    # editable / development install
 Then use any of the three modes:
 
 ```bash
-lsm-kv repl                        # interactive REPL
-lsm-kv api                         # REST API server on :8081
-lsm-kv api --port 9000 --reload    # API with custom port and auto-reload
-lsm-kv web                         # build frontend + start web dashboard
-lsm-kv web --skip-build            # web dashboard (reuse existing frontend build)
+kiwidb repl                        # interactive REPL
+kiwidb api                         # REST API server on :8081
+kiwidb api --port 9000 --reload    # API with custom port and auto-reload
+kiwidb web                         # build frontend + start web dashboard
+kiwidb web --skip-build            # web dashboard (reuse existing frontend build)
 ```
 
 ### Build a Distributable Package
@@ -56,7 +56,7 @@ The resulting `.whl` file can be installed on any machine with Python 3.12+:
 
 ```bash
 pip install dist/lsm_kv-0.1.0-py3-none-any.whl
-lsm-kv --help
+kiwidb --help
 ```
 
 ### As a Library

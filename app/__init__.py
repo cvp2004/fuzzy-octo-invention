@@ -1,4 +1,4 @@
-"""lsm-kv — a Log-Structured Merge Tree key-value store.
+"""kiwidb — a Log-Structured Merge Tree key-value store.
 
 Provides a durable, crash-safe, async-first storage engine with:
 

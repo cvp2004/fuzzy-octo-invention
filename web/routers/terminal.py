@@ -1,6 +1,6 @@
 """Terminal endpoint — runs REPL commands and returns text output.
 
-This does NOT execute shell commands. It processes lsm-kv REPL commands
+This does NOT execute shell commands. It processes kiwidb REPL commands
 (put, get, del, flush, mem, disk, stats, config, trace, help) against
 the in-process LSMEngine and returns formatted text output.
 """
@@ -38,7 +38,7 @@ commands:
 
 
 class CommandRequest(BaseModel):
-    """An lsm-kv REPL command to execute."""
+    """A kiwidb REPL command to execute."""
     command: str = Field(
         ...,
         description="The REPL command string (e.g. 'put mykey myvalue', 'get mykey', 'stats').",
@@ -47,7 +47,7 @@ class CommandRequest(BaseModel):
 
 
 class CommandResponse(BaseModel):
-    """Text output from an lsm-kv REPL command."""
+    """Text output from a kiwidb REPL command."""
     output: str = Field(..., description="The text output of the command.")
     error: bool = Field(False, description="True if the command produced an error.")
 
@@ -283,7 +283,7 @@ async def _run_command(line: str) -> str:
 
 @router.post("/run", response_model=CommandResponse, summary="Execute a REPL command")
 async def terminal_run(req: CommandRequest) -> CommandResponse:
-    """Execute an lsm-kv REPL command and return text output.
+    """Execute a kiwidb REPL command and return text output.
 
     Supported commands: `put`, `get`, `del`, `flush`, `mem`, `disk`,
     `stats`, `config`, `config set`, `trace`, `help`, `clear`.

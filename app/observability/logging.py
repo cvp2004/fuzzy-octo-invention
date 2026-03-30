@@ -1,7 +1,7 @@
-"""Centralized logging configuration for lsm-kv.
+"""Centralized logging configuration for kiwidb.
 
 Configures structlog with two output targets:
-    1. **File** — human-readable lines appended to ``<data_root>/logs/lsm-kv.log``
+    1. **File** — human-readable lines appended to ``<data_root>/logs/kiwidb.log``
     2. **TCP broadcast** — streams log lines to connected clients on a port
 
 Call :func:`configure_logging` once at startup (before any log calls).
@@ -185,7 +185,7 @@ def configure_logging(
     Parameters
     ----------
     data_root:
-        Root data directory. Log file is written to ``<data_root>/logs/lsm-kv.log``.
+        Root data directory. Log file is written to ``<data_root>/logs/kiwidb.log``.
     log_port:
         TCP port for the log broadcast server.  ``None`` reads from
         ``LSM_LOG_PORT`` env var (default 9009).  Pass ``0`` to disable TCP.
@@ -208,7 +208,7 @@ def configure_logging(
 
     log_dir = data_root / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / "lsm-kv.log"
+    log_file = log_dir / "kiwidb.log"
 
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(LOG_LEVEL)

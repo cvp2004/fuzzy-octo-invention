@@ -1,4 +1,4 @@
-# main.py — Interactive REPL for lsm-kv
+# main.py — Interactive REPL for kiwidb
 from __future__ import annotations
 
 import asyncio
@@ -378,13 +378,13 @@ async def main() -> None:
         style=STYLE,
     )
 
-    print(f"lsm-kv  —  data at {engine.data_root}")
+    print(f"kiwidb  —  data at {engine.data_root}")
     if engine.log_port:
         print(
             f"log stream on port {engine.log_port}  "
             f"(tail: python -m app.tools.logstream)"
         )
-    print(f"log file at {engine.data_root / 'logs' / 'lsm-kv.log'}")
+    print(f"log file at {engine.data_root / 'logs' / 'kiwidb.log'}")
     print("type 'help' to list commands")
 
     try:
@@ -392,7 +392,7 @@ async def main() -> None:
             try:
                 line = await asyncio.to_thread(
                     session.prompt,
-                    [("class:prompt", "lsm-kv"), ("", "> ")],
+                    [("class:prompt", "kiwidb"), ("", "> ")],
                 )
                 await handle(engine, line)
 

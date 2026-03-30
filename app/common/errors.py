@@ -1,4 +1,4 @@
-"""Exception hierarchy for lsm-kv.
+"""Exception hierarchy for kiwidb.
 
 All custom exceptions inherit from LSMError.
 Import only from this module — never define exceptions in implementation files.
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 
 class LSMError(Exception):
-    """Base class for all lsm-kv exceptions."""
+    """Base class for all kiwidb exceptions."""
 
 
 # ── WAL errors ───────────────────────────────────────────────────────────
