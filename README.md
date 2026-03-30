@@ -1,4 +1,4 @@
-# lsm-kv
+# Kiwi-DB
 
 A production-grade **Log-Structured Merge Tree** key-value store written in Python 3.12+.
 
