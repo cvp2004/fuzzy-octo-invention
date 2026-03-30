@@ -1,4 +1,4 @@
-# lsm-kv
+# kiwi-db
 
 A production-grade **Log-Structured Merge Tree** key-value store written in Python 3.12+.
 
@@ -15,9 +15,9 @@ A production-grade **Log-Structured Merge Tree** key-value store written in Pyth
 
 ```bash
 pip install .        # or: uv pip install -e .
-lsm-kv repl         # interactive REPL
-lsm-kv api          # REST API server on :8081
-lsm-kv web          # full web dashboard with React frontend
+kiwi-db repl         # interactive REPL
+kiwi-db api          # REST API server on :8081
+kiwi-db web          # full web dashboard with React frontend
 ```
 
 ### As a Library

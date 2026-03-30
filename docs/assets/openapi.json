@@ -1,0 +1,1871 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "kiwi-db Explorer",
+    "description": "REST API for an educational Log-Structured Merge Tree (LSM-Tree) key-value store. Provides endpoints for key-value operations, engine lifecycle management, memtable and SSTable inspection, compaction control, configuration, real-time statistics, and an interactive terminal.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/engine/status": {
+      "get": {
+        "tags": [
+          "engine"
+        ],
+        "summary": "Get engine status",
+        "description": "Return the current engine status including uptime and data directory path.",
+        "operationId": "engine_status_api_v1_engine_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/engine/open": {
+      "post": {
+        "tags": [
+          "engine"
+        ],
+        "summary": "Open the engine",
+        "description": "Open (initialize) the LSM engine. No-op if already open.",
+        "operationId": "engine_open_api_v1_engine_open_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineOkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/engine/close": {
+      "post": {
+        "tags": [
+          "engine"
+        ],
+        "summary": "Close the engine",
+        "description": "Gracefully close the engine, flushing pending writes.",
+        "operationId": "engine_close_api_v1_engine_close_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineOkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/engine/reset": {
+      "post": {
+        "tags": [
+          "engine"
+        ],
+        "summary": "Reset the engine",
+        "description": "Close engine, delete data directory, and reopen with a fresh state.",
+        "operationId": "engine_reset_api_v1_engine_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineOkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/kv/put": {
+      "post": {
+        "tags": [
+          "kv"
+        ],
+        "summary": "Put a key-value pair",
+        "description": "Write a key-value pair to the LSM store.\n\nThe key and value are UTF-8 encoded and written to the active memtable.\nA WAL entry is persisted before the write is acknowledged.",
+        "operationId": "kv_put_api_v1_kv_put_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/kv/delete": {
+      "post": {
+        "tags": [
+          "kv"
+        ],
+        "summary": "Delete a key",
+        "description": "Delete a key by writing a tombstone marker.\n\nThe key is not immediately removed \u2014 a tombstone sentinel is written so\nthat subsequent reads return \"not found\". The tombstone is eventually\nremoved during compaction.",
+        "operationId": "kv_delete_api_v1_kv_delete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/kv/batch": {
+      "post": {
+        "tags": [
+          "kv"
+        ],
+        "summary": "Batch put/delete operations",
+        "description": "Execute multiple put and delete operations in sequence.\n\nEach operation is applied in order. The response includes the range of\nsequence numbers assigned across all operations.",
+        "operationId": "kv_batch_api_v1_kv_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/kv/get": {
+      "get": {
+        "tags": [
+          "kv"
+        ],
+        "summary": "Get a value by key",
+        "description": "Read a value by key, searching memtable first, then SSTables.\n\nReturns the source of the result (active_memtable, sstable, or miss)\nand whether the key was found as a tombstone (deleted).",
+        "operationId": "kv_get_api_v1_kv_get_get",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The key to look up.",
+              "examples": [
+                "user:1"
+              ],
+              "title": "Key"
+            },
+            "description": "The key to look up."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/kv/trace": {
+      "get": {
+        "tags": [
+          "kv"
+        ],
+        "summary": "Trace a key lookup",
+        "description": "Walk the full lookup path step-by-step, returning a trace array.\n\nThe trace shows every component checked (active memtable, immutable\nsnapshots, L0 SSTables, L1+ SSTables) including bloom filter checks,\nsparse index bisects, and block cache hits/misses.",
+        "operationId": "kv_trace_api_v1_kv_trace_get",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The key to trace.",
+              "examples": [
+                "user:1"
+              ],
+              "title": "Key"
+            },
+            "description": "The key to trace."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mem": {
+      "get": {
+        "tags": [
+          "mem"
+        ],
+        "summary": "List all memtables",
+        "description": "List the active memtable and all immutable snapshots awaiting flush.\n\nReturns metadata (table ID, entry count, size) for each memtable.",
+        "operationId": "mem_list_api_v1_mem_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Mem List Api V1 Mem Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mem/flush": {
+      "post": {
+        "tags": [
+          "mem"
+        ],
+        "summary": "Force flush memtable",
+        "description": "Force-flush the active memtable to an SSTable on disk.\n\nThe active memtable is frozen, moved to the immutable queue, and\na new empty memtable is created. The flush pipeline will write\nthe frozen snapshot as a Level-0 SSTable.",
+        "operationId": "mem_flush_api_v1_mem_flush_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlushResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mem/{table_id}": {
+      "get": {
+        "tags": [
+          "mem"
+        ],
+        "summary": "Get memtable detail",
+        "description": "Return all entries in a specific memtable (active or immutable) by its ID.",
+        "operationId": "mem_detail_api_v1_mem__table_id__get",
+        "parameters": [
+          {
+            "name": "table_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Table Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Mem Detail Api V1 Mem  Table Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/disk": {
+      "get": {
+        "tags": [
+          "disk"
+        ],
+        "summary": "List all SSTables by level",
+        "description": "List all SSTables organized by level (L0 through L3).\n\nEach entry includes file ID, record count, block count, size, key range,\nand sequence number range.",
+        "operationId": "disk_list_api_v1_disk_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Disk List Api V1 Disk Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/disk/{file_id}": {
+      "get": {
+        "tags": [
+          "disk"
+        ],
+        "summary": "Get SSTable entries",
+        "description": "Return all key-value entries stored in a specific SSTable.",
+        "operationId": "disk_detail_api_v1_disk__file_id__get",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Disk Detail Api V1 Disk  File Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/disk/{file_id}/meta": {
+      "get": {
+        "tags": [
+          "disk"
+        ],
+        "summary": "Get SSTable metadata",
+        "description": "Return detailed metadata for a specific SSTable.\n\nIncludes level, record/block counts, size, key range, sequence range,\nbloom filter FPR, creation timestamp, and file paths.",
+        "operationId": "disk_meta_api_v1_disk__file_id__meta_get",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Disk Meta Api V1 Disk  File Id  Meta Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/disk/{file_id}/bloom": {
+      "get": {
+        "tags": [
+          "disk"
+        ],
+        "summary": "Get bloom filter stats",
+        "description": "Return bloom filter statistics for a specific SSTable.\n\nIncludes hash count, bit count, approximate false positive rate, and size.",
+        "operationId": "disk_bloom_api_v1_disk__file_id__bloom_get",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Disk Bloom Api V1 Disk  File Id  Bloom Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/disk/{file_id}/index": {
+      "get": {
+        "tags": [
+          "disk"
+        ],
+        "summary": "Get sparse index data",
+        "description": "Return the sparse index entries for a specific SSTable.\n\nEach entry maps the first key of a data block to its byte offset.",
+        "operationId": "disk_index_api_v1_disk__file_id__index_get",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Disk Index Api V1 Disk  File Id  Index Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compaction/status": {
+      "get": {
+        "tags": [
+          "compaction"
+        ],
+        "summary": "Compaction status",
+        "description": "Return the current status of compaction jobs and active levels.",
+        "operationId": "compaction_status_api_v1_compaction_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompactionStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compaction/trigger": {
+      "post": {
+        "tags": [
+          "compaction"
+        ],
+        "summary": "Trigger compaction",
+        "description": "Manually trigger a compaction check.\n\nCompaction runs if the L0 SSTable count meets or exceeds the configured threshold.",
+        "operationId": "compaction_trigger_api_v1_compaction_trigger_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompactionTriggerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compaction/history": {
+      "get": {
+        "tags": [
+          "compaction"
+        ],
+        "summary": "Compaction history",
+        "description": "Return the full compaction event log from compaction.log.",
+        "operationId": "compaction_history_api_v1_compaction_history_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompactionHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Engine stats snapshot",
+        "description": "Return a point-in-time snapshot of engine statistics.",
+        "operationId": "stats_snapshot_api_v1_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsSnapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/history": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Stats time-series history",
+        "description": "Return the ring buffer of stats samples (up to 300, sampled every 1 second).",
+        "operationId": "stats_history_api_v1_stats_history_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/write-amp": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Write amplification analysis",
+        "description": "Compute write amplification = total disk bytes written / user bytes written.\n\nDisk bytes include current SSTables, historical compaction output that\nhas since been replaced, and the WAL file.",
+        "operationId": "write_amplification_api_v1_stats_write_amp_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteAmpResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wal": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "WAL info",
+        "description": "Return Write-Ahead Log metadata: entry count, size, last sequence number, and path.",
+        "operationId": "wal_info_api_v1_wal_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalInfoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get current configuration",
+        "description": "Return all configuration parameters as a flat JSON object.",
+        "operationId": "config_get_api_v1_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Config Get Api V1 Config Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Update a config parameter",
+        "description": "Update a single configuration parameter at runtime.\n\nReturns both the old and new values for confirmation.",
+        "operationId": "config_patch_api_v1_config_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigPatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/config/schema": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get config schema",
+        "description": "Return the config schema with field names, types, and current values.",
+        "operationId": "config_schema_api_v1_config_schema_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigSchemaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/terminal/run": {
+      "post": {
+        "tags": [
+          "terminal"
+        ],
+        "summary": "Execute a REPL command",
+        "description": "Execute an kiwi-db REPL command and return text output.\n\nSupported commands: `put`, `get`, `del`, `flush`, `mem`, `disk`,\n`stats`, `config`, `config set`, `trace`, `help`, `clear`.",
+        "operationId": "terminal_run_api_v1_terminal_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{full_path}": {
+      "get": {
+        "summary": " Serve Spa",
+        "description": "Serve index.html for all non-API routes (React Router handles client-side routing).",
+        "operationId": "_serve_spa__full_path__get",
+        "parameters": [
+          {
+            "name": "full_path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Full Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BatchOp": {
+        "properties": {
+          "op": {
+            "type": "string",
+            "title": "Op",
+            "description": "Operation type: \"put\" or \"del\".",
+            "examples": [
+              "put"
+            ]
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The key to operate on.",
+            "examples": [
+              "user:1"
+            ]
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "The value (required for put, ignored for del).",
+            "examples": [
+              "Alice"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "op",
+          "key"
+        ],
+        "title": "BatchOp",
+        "description": "A single operation within a batch request."
+      },
+      "BatchRequest": {
+        "properties": {
+          "ops": {
+            "items": {
+              "$ref": "#/components/schemas/BatchOp"
+            },
+            "type": "array",
+            "title": "Ops",
+            "description": "List of operations to execute."
+          }
+        },
+        "type": "object",
+        "required": [
+          "ops"
+        ],
+        "title": "BatchRequest",
+        "description": "Execute multiple put/delete operations atomically."
+      },
+      "BatchResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Whether the batch succeeded."
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of operations executed."
+          },
+          "seq_range": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Seq Range",
+            "description": "[start_seq, end_seq] range of sequence numbers assigned."
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "count",
+          "seq_range"
+        ],
+        "title": "BatchResponse",
+        "description": "Response for a batch write operation."
+      },
+      "CommandRequest": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "title": "Command",
+            "description": "The REPL command string (e.g. 'put mykey myvalue', 'get mykey', 'stats').",
+            "examples": [
+              "put user:1 Alice",
+              "get user:1",
+              "stats",
+              "flush",
+              "help"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "command"
+        ],
+        "title": "CommandRequest",
+        "description": "An kiwi-db REPL command to execute."
+      },
+      "CommandResponse": {
+        "properties": {
+          "output": {
+            "type": "string",
+            "title": "Output",
+            "description": "The text output of the command."
+          },
+          "error": {
+            "type": "boolean",
+            "title": "Error",
+            "description": "True if the command produced an error.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "output"
+        ],
+        "title": "CommandResponse",
+        "description": "Text output from an kiwi-db REPL command."
+      },
+      "CompactionHistoryResponse": {
+        "properties": {
+          "events": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "Chronological list of compaction events from compaction.log."
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "CompactionHistoryResponse",
+        "description": "Compaction event log."
+      },
+      "CompactionJob": {
+        "properties": {
+          "src": {
+            "type": "string",
+            "title": "Src",
+            "description": "Source level or file ID."
+          },
+          "dst": {
+            "type": "string",
+            "title": "Dst",
+            "description": "Destination level or file ID."
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "Async task identifier."
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "ISO timestamp when the job started."
+          }
+        },
+        "type": "object",
+        "required": [
+          "src",
+          "dst",
+          "task_id"
+        ],
+        "title": "CompactionJob",
+        "description": "An active compaction job."
+      },
+      "CompactionStatusResponse": {
+        "properties": {
+          "active_jobs": {
+            "items": {
+              "$ref": "#/components/schemas/CompactionJob"
+            },
+            "type": "array",
+            "title": "Active Jobs",
+            "description": "Currently running compaction jobs."
+          },
+          "active_levels": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Active Levels",
+            "description": "Levels with active compaction."
+          },
+          "last_completed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Completed",
+            "description": "Timestamp of the last completed compaction."
+          }
+        },
+        "type": "object",
+        "required": [
+          "active_jobs",
+          "active_levels"
+        ],
+        "title": "CompactionStatusResponse",
+        "description": "Current compaction status."
+      },
+      "CompactionTriggerResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Whether the operation succeeded."
+          },
+          "triggered": {
+            "type": "boolean",
+            "title": "Triggered",
+            "description": "Whether compaction was actually triggered (L0 count >= threshold)."
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Human-readable reason (e.g. L0 count vs threshold)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "triggered",
+          "reason"
+        ],
+        "title": "CompactionTriggerResponse",
+        "description": "Response from a manual compaction trigger."
+      },
+      "ConfigField": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Configuration key name."
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Python type name (int, float, str)."
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Value",
+            "description": "Current value."
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "type",
+          "value"
+        ],
+        "title": "ConfigField",
+        "description": "A single field in the config schema."
+      },
+      "ConfigPatch": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Configuration key to update.",
+            "examples": [
+              "max_memtable_size"
+            ]
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Value",
+            "description": "New value for the parameter.",
+            "examples": [
+              4194304
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "ConfigPatch",
+        "description": "Update a single configuration parameter."
+      },
+      "ConfigPatchResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Whether the update succeeded."
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The configuration key that was updated."
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Old Value",
+            "description": "Previous value."
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "New Value",
+            "description": "New value after update."
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "key",
+          "old_value",
+          "new_value"
+        ],
+        "title": "ConfigPatchResponse",
+        "description": "Response after updating a config parameter."
+      },
+      "ConfigSchemaResponse": {
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/ConfigField"
+            },
+            "type": "array",
+            "title": "Fields",
+            "description": "All configuration fields."
+          }
+        },
+        "type": "object",
+        "required": [
+          "fields"
+        ],
+        "title": "ConfigSchemaResponse",
+        "description": "Full config schema with types and current values."
+      },
+      "DeleteRequest": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The key to delete.",
+            "examples": [
+              "user:1"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "DeleteRequest",
+        "description": "Delete a key by writing a tombstone marker."
+      },
+      "EngineOkResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Whether the operation succeeded."
+          },
+          "data_root": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Root",
+            "description": "Filesystem path to the data directory (when applicable)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "EngineOkResponse",
+        "description": "Acknowledgement for engine lifecycle operations."
+      },
+      "EngineStatusResponse": {
+        "properties": {
+          "open": {
+            "type": "boolean",
+            "title": "Open",
+            "description": "Whether the engine is currently open."
+          },
+          "data_root": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Root",
+            "description": "Filesystem path to the data directory."
+          },
+          "log_port": {
+            "type": "integer",
+            "title": "Log Port",
+            "description": "TCP port for the structured log server."
+          },
+          "uptime_s": {
+            "type": "number",
+            "title": "Uptime S",
+            "description": "Seconds since the engine was opened."
+          }
+        },
+        "type": "object",
+        "required": [
+          "open",
+          "log_port",
+          "uptime_s"
+        ],
+        "title": "EngineStatusResponse",
+        "description": "Current engine status."
+      },
+      "FlushResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Whether the operation succeeded."
+          },
+          "flushed": {
+            "type": "boolean",
+            "title": "Flushed",
+            "description": "True if data was actually flushed (false if memtable was empty)."
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id",
+            "description": "ID of the flushed snapshot, if a flush occurred."
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "flushed"
+        ],
+        "title": "FlushResponse",
+        "description": "Response for a memtable flush operation."
+      },
+      "GetResponse": {
+        "properties": {
+          "found": {
+            "type": "boolean",
+            "title": "Found",
+            "description": "Whether the key exists and is not deleted."
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "The value, or null if not found / deleted."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Where the result came from: \"active_memtable\", \"memtable\", \"sstable\", or \"miss\"."
+          },
+          "deleted": {
+            "type": "boolean",
+            "title": "Deleted",
+            "description": "True if the key was found but is tombstoned.",
+            "default": false
+          },
+          "seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq",
+            "description": "Sequence number of the entry, if found."
+          }
+        },
+        "type": "object",
+        "required": [
+          "found",
+          "source"
+        ],
+        "title": "GetResponse",
+        "description": "Response for a key lookup."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PutRequest": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The key to write.",
+            "examples": [
+              "user:1"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "The value to associate with the key.",
+            "examples": [
+              "Alice"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "PutRequest",
+        "description": "Write a key-value pair to the store."
+      },
+      "StatsHistoryResponse": {
+        "properties": {
+          "samples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Samples",
+            "description": "Time-ordered stats samples."
+          }
+        },
+        "type": "object",
+        "required": [
+          "samples"
+        ],
+        "title": "StatsHistoryResponse",
+        "description": "Ring buffer of stats samples (max 300, sampled every 1s)."
+      },
+      "StatsSnapshot": {
+        "properties": {
+          "key_count": {
+            "type": "integer",
+            "title": "Key Count",
+            "description": "Number of keys in the active memtable."
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq",
+            "description": "Current global sequence number."
+          },
+          "wal_entry_count": {
+            "type": "integer",
+            "title": "Wal Entry Count",
+            "description": "Number of entries in the Write-Ahead Log."
+          },
+          "active_table_id": {
+            "type": "string",
+            "title": "Active Table Id",
+            "description": "UUID of the active memtable."
+          },
+          "active_size_bytes": {
+            "type": "integer",
+            "title": "Active Size Bytes",
+            "description": "Byte size of the active memtable."
+          },
+          "immutable_queue_len": {
+            "type": "integer",
+            "title": "Immutable Queue Len",
+            "description": "Number of frozen memtable snapshots awaiting flush."
+          },
+          "l0_sstable_count": {
+            "type": "integer",
+            "title": "L0 Sstable Count",
+            "description": "Number of Level-0 SSTables on disk."
+          },
+          "compaction_active": {
+            "type": "boolean",
+            "title": "Compaction Active",
+            "description": "Whether a compaction job is currently running."
+          }
+        },
+        "type": "object",
+        "required": [
+          "key_count",
+          "seq",
+          "wal_entry_count",
+          "active_table_id",
+          "active_size_bytes",
+          "immutable_queue_len",
+          "l0_sstable_count",
+          "compaction_active"
+        ],
+        "title": "StatsSnapshot",
+        "description": "Live engine statistics snapshot."
+      },
+      "TraceResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The key that was traced."
+          },
+          "found": {
+            "type": "boolean",
+            "title": "Found",
+            "description": "Whether the key was ultimately found."
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "The value if found."
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "The component that held the final result."
+          },
+          "seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq",
+            "description": "Sequence number of the found entry."
+          },
+          "steps": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Steps",
+            "description": "Ordered list of lookup steps."
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "found",
+          "steps"
+        ],
+        "title": "TraceResponse",
+        "description": "Full trace of a key lookup through all storage layers."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WalInfoResponse": {
+        "properties": {
+          "entry_count": {
+            "type": "integer",
+            "title": "Entry Count",
+            "description": "Number of WAL entries."
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes",
+            "description": "WAL file size in bytes."
+          },
+          "last_seq": {
+            "type": "integer",
+            "title": "Last Seq",
+            "description": "Sequence number of the last WAL entry."
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Filesystem path to the WAL file."
+          }
+        },
+        "type": "object",
+        "required": [
+          "entry_count",
+          "size_bytes",
+          "last_seq",
+          "path"
+        ],
+        "title": "WalInfoResponse",
+        "description": "Write-Ahead Log information."
+      },
+      "WriteAmpResponse": {
+        "properties": {
+          "user_bytes_written": {
+            "type": "integer",
+            "title": "User Bytes Written",
+            "description": "Cumulative bytes written by user operations (key + value)."
+          },
+          "disk_bytes_current_sstables": {
+            "type": "integer",
+            "title": "Disk Bytes Current Sstables",
+            "description": "Total bytes of all current SSTables on disk."
+          },
+          "disk_bytes_compaction_historical": {
+            "type": "integer",
+            "title": "Disk Bytes Compaction Historical",
+            "description": "Bytes written by compactions whose output was later replaced."
+          },
+          "disk_bytes_wal": {
+            "type": "integer",
+            "title": "Disk Bytes Wal",
+            "description": "Current WAL file size in bytes."
+          },
+          "disk_bytes_total": {
+            "type": "integer",
+            "title": "Disk Bytes Total",
+            "description": "Sum of SSTable, historical compaction, and WAL bytes."
+          },
+          "write_amplification": {
+            "type": "number",
+            "title": "Write Amplification",
+            "description": "Ratio of total disk bytes to user bytes (disk / user)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_bytes_written",
+          "disk_bytes_current_sstables",
+          "disk_bytes_compaction_historical",
+          "disk_bytes_wal",
+          "disk_bytes_total",
+          "write_amplification"
+        ],
+        "title": "WriteAmpResponse",
+        "description": "Write amplification analysis."
+      },
+      "WriteResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Whether the operation succeeded."
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq",
+            "description": "Sequence number after the write."
+          },
+          "timestamp_ms": {
+            "type": "integer",
+            "title": "Timestamp Ms",
+            "description": "Server timestamp in milliseconds."
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "seq",
+          "timestamp_ms"
+        ],
+        "title": "WriteResponse",
+        "description": "Response for a successful write (put or delete)."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "kv",
+      "description": "Key-value CRUD operations \u2014 put, get, delete, batch writes, and lookup tracing."
+    },
+    {
+      "name": "engine",
+      "description": "Engine lifecycle \u2014 open, close, reset, and status checks."
+    },
+    {
+      "name": "mem",
+      "description": "MemTable inspection \u2014 list active and immutable memtables, view entries, force flush."
+    },
+    {
+      "name": "disk",
+      "description": "SSTable inspection \u2014 list SSTables by level, view entries, metadata, bloom filters, and sparse indexes."
+    },
+    {
+      "name": "compaction",
+      "description": "Compaction control \u2014 view active jobs, trigger compaction, and browse compaction history."
+    },
+    {
+      "name": "stats",
+      "description": "Engine statistics \u2014 live snapshot, time-series history, write amplification analysis, and WAL info."
+    },
+    {
+      "name": "config",
+      "description": "Runtime configuration \u2014 view, update, and inspect the config schema."
+    },
+    {
+      "name": "terminal",
+      "description": "Interactive REPL \u2014 execute kiwi-db commands (put, get, del, flush, etc.) and get text output."
+    }
+  ]
+}

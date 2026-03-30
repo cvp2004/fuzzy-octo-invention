@@ -1,6 +1,6 @@
 # Engine
 
-The main entry point for the lsm-kv library.
+The main entry point for the kiwi-db library.
 
 ## LSMEngine
 

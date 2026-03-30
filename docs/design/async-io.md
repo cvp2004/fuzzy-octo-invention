@@ -1,6 +1,6 @@
 # Async I/O Integration
 
-This document explains how async I/O is applied throughout the lsm-kv engine — which operations are async, which stay sync, and why. Every operation is classified before choosing its execution model: I/O-bound operations get async treatment, pure computation stays synchronous.
+This document explains how async I/O is applied throughout the kiwi-db engine — which operations are async, which stay sync, and why. Every operation is classified before choosing its execution model: I/O-bound operations get async treatment, pure computation stays synchronous.
 
 ## Classification Framework
 

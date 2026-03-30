@@ -1,6 +1,6 @@
-site_name: lsm-kv Documentation
+site_name: kiwi-db Documentation
 site_description: Production-grade Log-Structured Merge Tree Key-Value Store
-repo_url: https://github.com/your-org/lsm-kv
+repo_url: https://github.com/cvp2004/kiwi-db
 
 theme:
   name: material
@@ -35,7 +35,7 @@ plugins:
       toc_depth: 3
       enumerate_headings: false
       enumerate_figures: false
-      print_page_title: "lsm-kv Documentation"
+      print_page_title: "kiwi-db Documentation"
   - mkdocstrings:
       handlers:
         python:
@@ -55,6 +55,8 @@ plugins:
             - .
 
 markdown_extensions:
+  - attr_list
+  - md_in_html
   - admonition
   - pymdownx.details
   - pymdownx.superfences:
@@ -80,6 +82,7 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - API Reference:
+    - REST API: api/rest.md
     - Engine: api/engine.md
     - Configuration: api/config.md
     - Types & Constants: api/types.md

@@ -73,7 +73,53 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 # App
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="lsm-kv Explorer", lifespan=lifespan)
+app = FastAPI(
+    title="lsm-kv Explorer",
+    description=(
+        "REST API for an educational Log-Structured Merge Tree (LSM-Tree) "
+        "key-value store. Provides endpoints for key-value operations, engine "
+        "lifecycle management, memtable and SSTable inspection, compaction "
+        "control, configuration, real-time statistics, and an interactive terminal."
+    ),
+    version="1.0.0",
+    docs_url="/swagger",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "kv",
+            "description": "Key-value CRUD operations — put, get, delete, batch writes, and lookup tracing.",
+        },
+        {
+            "name": "engine",
+            "description": "Engine lifecycle — open, close, reset, and status checks.",
+        },
+        {
+            "name": "mem",
+            "description": "MemTable inspection — list active and immutable memtables, view entries, force flush.",
+        },
+        {
+            "name": "disk",
+            "description": "SSTable inspection — list SSTables by level, view entries, metadata, bloom filters, and sparse indexes.",
+        },
+        {
+            "name": "compaction",
+            "description": "Compaction control — view active jobs, trigger compaction, and browse compaction history.",
+        },
+        {
+            "name": "stats",
+            "description": "Engine statistics — live snapshot, time-series history, write amplification analysis, and WAL info.",
+        },
+        {
+            "name": "config",
+            "description": "Runtime configuration — view, update, and inspect the config schema.",
+        },
+        {
+            "name": "terminal",
+            "description": "Interactive REPL — execute lsm-kv commands (put, get, del, flush, etc.) and get text output.",
+        },
+    ],
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,

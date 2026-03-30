@@ -1,6 +1,6 @@
 # Write-Path Optimizations
 
-This document catalogs every significant design decision in lsm-kv and explains how each one contributes to a write-optimized LSM architecture. Sections are ordered by impact on write throughput — the highest-impact architectural decisions first, supporting optimizations later. Each section provides enough context for generating presentation slides — including the problem, the chosen solution, what alternatives exist, and the concrete benefit.
+This document catalogs every significant design decision in kiwi-db and explains how each one contributes to a write-optimized LSM architecture. Sections are ordered by impact on write throughput — the highest-impact architectural decisions first, supporting optimizations later. Each section provides enough context for generating presentation slides — including the problem, the chosen solution, what alternatives exist, and the concrete benefit.
 
 ---
 
@@ -8,7 +8,7 @@ This document catalogs every significant design decision in lsm-kv and explains 
 
 **Problem**: In a traditional leveled LSM-Tree, every level maintains a single sorted run. When a memtable is flushed, the resulting SSTable must be *merged* into the existing L0 sorted run before the flush can complete. This merge-on-write design means the write path is blocked by compaction-like I/O — the very thing compaction was supposed to defer.
 
-**Decision**: lsm-kv splits level organization into two distinct strategies:
+**Decision**: kiwi-db splits level organization into two distinct strategies:
 
 | Level | Files | Key Ranges | Flush Cost | Read Cost |
 |-------|-------|------------|------------|-----------|
@@ -27,7 +27,7 @@ Traditional LSM (merge-on-flush):
   freeze memtable → merge with L0 sorted run → replace L0 → done
   └── blocked on merge I/O (100–500ms for 64MB)
 
-lsm-kv (append-to-L0):
+kiwi-db (append-to-L0):
   freeze memtable → write new L0 file → register in manifest → done
   └── no merge; flush is pure sequential write (~50ms for 64MB)
 ```
@@ -75,7 +75,7 @@ slot1.my_committed   = Event_B
 
 | Approach | Flush Latency (K snapshots) | Disk Utilization | Commit Ordering |
 |----------|---------------------------|------------------|-----------------|
-| **lsm-kv (parallel write + serial commit)** | **T_io × ceil(K/W)** — parallel bounded by W | **~100%** with W=2 on NVMe | Guaranteed FIFO via event chain |
+| **kiwi-db (parallel write + serial commit)** | **T_io × ceil(K/W)** — parallel bounded by W | **~100%** with W=2 on NVMe | Guaranteed FIFO via event chain |
 | Sequential flush (one at a time) | T_io × K — fully serial | ~50% on NVMe (idle between flushes) | Trivially ordered |
 | Fully parallel (no ordering) | T_io × 1 (all concurrent) | ~100% | **Broken** — manifest non-deterministic, queue pops unordered |
 | Batched flush (group then write) | T_io + merge cost | Variable | Requires post-merge sort |
@@ -112,7 +112,7 @@ CompactionManager                   run_compaction(task)
 
 | Approach | Write Path Blocking | Merge Parallelism | Event Loop Impact |
 |----------|--------------------|--------------------|-------------------|
-| **lsm-kv (ProcessPoolExecutor subprocess)** | **Zero** — fire-and-forget dispatch | **True parallelism** — own GIL, own memory space | **None** — event loop free for put/get |
+| **kiwi-db (ProcessPoolExecutor subprocess)** | **Zero** — fire-and-forget dispatch | **True parallelism** — own GIL, own memory space | **None** — event loop free for put/get |
 | In-thread compaction (GIL) | Zero (background thread) | **None** — GIL serializes with writes | CPU-bound merge competes with writes for GIL |
 | Synchronous compaction (inline) | **O(M)** — blocks until merge completes | N/A | **Blocked** — no writes during merge |
 | Async compaction (to_thread) | Zero (offloaded) | **None** — still one GIL | Moderate — thread pool contention with WAL fsync |
@@ -142,7 +142,7 @@ The subprocess approach is the only option that achieves true parallelism on CPy
 
 | Approach | Write Latency | Consistency Guarantee | Read Blocking |
 |----------|--------------|----------------------|---------------|
-| **lsm-kv (single atomic lock)** | **T_fsync + T_put** — sequential under one lock | **Full** — WAL durable before memtable visible | **None** — readers are lock-free |
+| **kiwi-db (single atomic lock)** | **T_fsync + T_put** — sequential under one lock | **Full** — WAL durable before memtable visible | **None** — readers are lock-free |
 | Per-component locks (WAL lock + memtable lock) | T_fsync ‖ T_put — potentially parallel | Requires 2PC or ordering protocol | Depends on lock design |
 | Global RWLock (read/write lock) | T_fsync + T_put — same latency | Full | **Readers block during writes** |
 | Lock-free CAS (compare-and-swap) | T_fsync + T_put — plus retry overhead | Requires careful memory ordering | None |
@@ -181,7 +181,7 @@ Skip list wins because SSTable flush requires sorted iteration, and lock-free re
 
 | Structure | Write | Read | Freeze (sorted snapshot) | Write Contention (C writers) | Read Contention (R readers) |
 |-----------|-------|------|-------------------------|-----------------------------|-----------------------------|
-| **Skip List (lsm-kv)** | **O(log N)** per-node lock | **O(log N)** lock-free | **O(N)** lock-free iteration | **O(C × log N)** — disjoint keys don't contend | **Zero** — no locks |
+| **Skip List (kiwi-db)** | **O(log N)** per-node lock | **O(log N)** lock-free | **O(N)** lock-free iteration | **O(C × log N)** — disjoint keys don't contend | **Zero** — no locks |
 | B-Tree + RWLock | O(log N) write-locked | O(log N) read-locked | O(N) read-locked | O(C × log N) — serialized by global write lock | O(R × log N) — blocked during writes |
 | Hash Map + sort-on-freeze | **O(1)** amortized | **O(1)** | **O(N log N)** sort required | O(C) — global lock | Zero (if lock-free hash) |
 | Red-Black Tree + RWLock | O(log N) | O(log N) | O(N) | Rebalancing holds lock longer | Blocked during rebalance |
@@ -207,7 +207,7 @@ Writer calls put() → threshold reached → maybe_freeze()
 
 | Approach | Memory Usage | Write Stall Behavior | Failure Detection |
 |----------|-------------|---------------------|-------------------|
-| **lsm-kv (bounded queue + timeout)** | **O(Q × M)** — bounded at 4 × 64MB = 256MB max | **Controlled** — blocks writer, resumes when space frees | **60s timeout** → FreezeBackpressureTimeout |
+| **kiwi-db (bounded queue + timeout)** | **O(Q × M)** — bounded at 4 × 64MB = 256MB max | **Controlled** — blocks writer, resumes when space frees | **60s timeout** → FreezeBackpressureTimeout |
 | Unbounded queue (no limit) | **O(∞)** — grows until OOM | **None** — writes never stall, then process crashes | OOM kill (uncontrolled) |
 | Drop-oldest (evict unflushed) | O(Q × M) — bounded | None — but **loses data** silently | No detection needed (data lost) |
 | Rate limiting (token bucket) | O(Q × M) — bounded | Smooth degradation | Latency spike detection |

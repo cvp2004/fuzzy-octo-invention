@@ -8,7 +8,7 @@ the in-process LSMEngine and returns formatted text output.
 from __future__ import annotations
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import web.server as srv
 
@@ -32,13 +32,29 @@ commands:
   help                 show this message"""
 
 
+# ---------------------------------------------------------------------------
+# Request / Response models
+# ---------------------------------------------------------------------------
+
+
 class CommandRequest(BaseModel):
-    command: str
+    """An lsm-kv REPL command to execute."""
+    command: str = Field(
+        ...,
+        description="The REPL command string (e.g. 'put mykey myvalue', 'get mykey', 'stats').",
+        examples=["put user:1 Alice", "get user:1", "stats", "flush", "help"],
+    )
 
 
 class CommandResponse(BaseModel):
-    output: str
-    error: bool = False
+    """Text output from an lsm-kv REPL command."""
+    output: str = Field(..., description="The text output of the command.")
+    error: bool = Field(False, description="True if the command produced an error.")
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def _decode(val: object) -> str:
@@ -265,9 +281,13 @@ async def _run_command(line: str) -> str:
         return f"unknown command: {cmd!r} -- type 'help'"
 
 
-@router.post("/run")
+@router.post("/run", response_model=CommandResponse, summary="Execute a REPL command")
 async def terminal_run(req: CommandRequest) -> CommandResponse:
-    """Process an lsm-kv REPL command and return text output."""
+    """Execute an lsm-kv REPL command and return text output.
+
+    Supported commands: `put`, `get`, `del`, `flush`, `mem`, `disk`,
+    `stats`, `config`, `config set`, `trace`, `help`, `clear`.
+    """
     try:
         output = await _run_command(req.command)
         return CommandResponse(output=output)

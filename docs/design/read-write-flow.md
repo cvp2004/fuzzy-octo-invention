@@ -1,6 +1,6 @@
 # Read & Write Flow
 
-This document traces the exact path of data through the lsm-kv engine for both write and read operations. Every lock acquisition, every conditional branch, and every data transformation is documented.
+This document traces the exact path of data through the kiwi-db engine for both write and read operations. Every lock acquisition, every conditional branch, and every data transformation is documented.
 
 ---
 

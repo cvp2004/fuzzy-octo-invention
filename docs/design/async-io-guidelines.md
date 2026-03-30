@@ -1,6 +1,6 @@
 # Async I/O Coding Guidelines
 
-Generic coding rules for implementing async I/O in Python, extracted from patterns used throughout the lsm-kv engine. These guidelines apply to any Python project that mixes async event loops with blocking stdlib I/O.
+Generic coding rules for implementing async I/O in Python, extracted from patterns used throughout the kiwi-db engine. These guidelines apply to any Python project that mixes async event loops with blocking stdlib I/O.
 
 ## Foundational Principle
 
@@ -29,7 +29,7 @@ Is the operation I/O-bound?
 7. **Cleanup never raises** — wrap each resource release in its own try/except
 8. **Prefer `to_thread` over raw threading** — lets asyncio manage the thread lifecycle
 
-## Patterns Used in lsm-kv
+## Patterns Used in kiwi-db
 
 ### Sync I/O Offload
 ```python

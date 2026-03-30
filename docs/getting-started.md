@@ -6,7 +6,7 @@
 
 ```bash
 uv sync                # install dependencies into virtual environment
-uv pip install -e .    # install lsm-kv CLI in editable mode
+uv pip install -e .    # install kiwi-db CLI in editable mode
 ```
 
 ### From Wheel (production)
@@ -18,10 +18,10 @@ pip install dist/lsm_kv-0.1.0-py3-none-any.whl  # install anywhere
 
 ## Usage
 
-The `lsm-kv` CLI provides three modes — REPL, API, and Web — each started with a separate subcommand:
+The `kiwi-db` CLI provides three modes — REPL, API, and Web — each started with a separate subcommand:
 
 ```bash
-lsm-kv --help
+kiwi-db --help
 ```
 
 ### REPL Mode
@@ -29,7 +29,7 @@ lsm-kv --help
 Start an interactive shell to read/write keys, inspect memtables and SSTables, and trace lookups:
 
 ```bash
-lsm-kv repl
+kiwi-db repl
 # or without installing the CLI:
 uv run python main.py
 ```
@@ -41,8 +41,8 @@ Available commands: `put`, `get`, `del`, `flush`, `mem`, `disk`, `stats`, `confi
 Start only the FastAPI REST server (no frontend):
 
 ```bash
-lsm-kv api                         # default: 0.0.0.0:8081
-lsm-kv api --port 9000 --reload    # custom port with auto-reload
+kiwi-db api                         # default: 0.0.0.0:8081
+kiwi-db api --port 9000 --reload    # custom port with auto-reload
 ```
 
 API endpoints are served under `/api/v1/` — KV operations, memtable/SSTable inspection, compaction control, stats, config, and a terminal interface.
@@ -52,9 +52,9 @@ API endpoints are served under `/api/v1/` — KV operations, memtable/SSTable in
 Build the React frontend and start the full web dashboard:
 
 ```bash
-lsm-kv web                   # builds frontend then starts server on :8081
-lsm-kv web --skip-build      # reuse existing frontend/dist/
-lsm-kv web --port 3000       # custom port
+kiwi-db web                   # builds frontend then starts server on :8081
+kiwi-db web --skip-build      # reuse existing frontend/dist/
+kiwi-db web --port 3000       # custom port
 ```
 
 Open `http://localhost:8081` for the interactive dashboard with KV explorer, memtable viewer, SSTable browser, compaction monitor, live log streaming, and web terminal.

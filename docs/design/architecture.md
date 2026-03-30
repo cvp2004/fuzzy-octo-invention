@@ -1,6 +1,6 @@
 # System Architecture
 
-lsm-kv is a Log-Structured Merge Tree key-value store built in Python 3.12+. It provides durable, crash-safe storage with an async-first API. The engine coordinates six subsystems — WAL, memtable, SSTable, flush pipeline, compaction, and observability — through a strict layered dependency model where no layer imports from a layer above it.
+kiwi-db is a Log-Structured Merge Tree key-value store built in Python 3.12+. It provides durable, crash-safe storage with an async-first API. The engine coordinates six subsystems — WAL, memtable, SSTable, flush pipeline, compaction, and observability — through a strict layered dependency model where no layer imports from a layer above it.
 
 ## Layered Dependency Model
 

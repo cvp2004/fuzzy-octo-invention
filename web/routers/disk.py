@@ -9,22 +9,32 @@ import web.server as srv
 router = APIRouter()
 
 
-@router.get("")
+@router.get("", summary="List all SSTables by level")
 async def disk_list() -> dict[str, object]:
+    """List all SSTables organized by level (L0 through L3).
+
+    Each entry includes file ID, record count, block count, size, key range,
+    and sequence number range.
+    """
     e = srv.get_engine()
     return e.show_disk()
 
 
-@router.get("/{file_id}")
+@router.get("/{file_id}", summary="Get SSTable entries")
 async def disk_detail(file_id: str) -> dict[str, object]:
+    """Return all key-value entries stored in a specific SSTable."""
     e = srv.get_engine()
     return e.show_disk(file_id)
 
 
-@router.get("/{file_id}/meta")
+@router.get("/{file_id}/meta", summary="Get SSTable metadata")
 async def disk_meta(file_id: str) -> dict[str, object]:
+    """Return detailed metadata for a specific SSTable.
+
+    Includes level, record/block counts, size, key range, sequence range,
+    bloom filter FPR, creation timestamp, and file paths.
+    """
     e = srv.get_engine()
-    # Get the reader directly for meta fields
     try:
         with e._sst._registry.open_reader(file_id) as reader:
             m = reader.meta
@@ -49,8 +59,12 @@ async def disk_meta(file_id: str) -> dict[str, object]:
         return {"error": f"SSTable {file_id} not found"}
 
 
-@router.get("/{file_id}/bloom")
+@router.get("/{file_id}/bloom", summary="Get bloom filter stats")
 async def disk_bloom(file_id: str) -> dict[str, object]:
+    """Return bloom filter statistics for a specific SSTable.
+
+    Includes hash count, bit count, approximate false positive rate, and size.
+    """
     e = srv.get_engine()
     try:
         with e._sst._registry.open_reader(file_id) as reader:
@@ -70,8 +84,12 @@ async def disk_bloom(file_id: str) -> dict[str, object]:
         return {"error": f"SSTable {file_id} not found"}
 
 
-@router.get("/{file_id}/index")
+@router.get("/{file_id}/index", summary="Get sparse index data")
 async def disk_index(file_id: str) -> dict[str, object]:
+    """Return the sparse index entries for a specific SSTable.
+
+    Each entry maps the first key of a data block to its byte offset.
+    """
     e = srv.get_engine()
     try:
         with e._sst._registry.open_reader(file_id) as reader:

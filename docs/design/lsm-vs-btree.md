@@ -1,6 +1,6 @@
 # LSM Trees vs B+ Trees
 
-This document explains what a Log-Structured Merge Tree (LSM Tree) is, how it compares to the traditional B+ Tree used in most relational databases, and why lsm-kv chose an LSM architecture.
+This document explains what a Log-Structured Merge Tree (LSM Tree) is, how it compares to the traditional B+ Tree used in most relational databases, and why kiwi-db chose an LSM architecture.
 
 ---
 
@@ -104,9 +104,9 @@ You cannot minimize all three simultaneously. Every design makes a tradeoff:
 | B+ Tree | Read + Memory | Write (random I/O per update) |
 | LSM Tree (leveling) | Read + Memory | Write (compaction rewrites) |
 | LSM Tree (tiering) | Write + Memory | Read (multiple runs per level) |
-| **LSM Tree (lsm-kv hybrid)** | **Write + Read (balanced)** | **Memory (bounded L0 overlap)** |
+| **LSM Tree (kiwi-db hybrid)** | **Write + Read (balanced)** | **Memory (bounded L0 overlap)** |
 
-lsm-kv's hybrid approach (tiering at L0, leveling at L1+) trades a small, bounded read penalty at L0 for dramatically cheaper writes — the best tradeoff for write-heavy workloads.
+kiwi-db's hybrid approach (tiering at L0, leveling at L1+) trades a small, bounded read penalty at L0 for dramatically cheaper writes — the best tradeoff for write-heavy workloads.
 
 ---
 
@@ -120,11 +120,11 @@ On SSDs, the gap is smaller (~3–10×) but still significant at scale. Addition
 
 ### 2. Write path has no disk contention
 
-B+ Tree writes modify shared pages — concurrent writers must coordinate via page-level locks, and page splits can cascade. LSM writes go to an in-memory memtable. Multiple threads can write concurrently with fine-grained locking (per-node in lsm-kv's skip list). The disk is only involved during background flush, which is non-blocking.
+B+ Tree writes modify shared pages — concurrent writers must coordinate via page-level locks, and page splits can cascade. LSM writes go to an in-memory memtable. Multiple threads can write concurrently with fine-grained locking (per-node in kiwi-db's skip list). The disk is only involved during background flush, which is non-blocking.
 
 ### 3. Writes never block on compaction
 
-In lsm-kv, compaction runs in a background subprocess. The write path (WAL + memtable) is completely independent of compaction. In a B+ Tree, there's no concept of background reorganization — every write directly modifies the tree.
+In kiwi-db, compaction runs in a background subprocess. The write path (WAL + memtable) is completely independent of compaction. In a B+ Tree, there's no concept of background reorganization — every write directly modifies the tree.
 
 ### 4. Write amplification is deferred and amortized
 
@@ -148,9 +148,9 @@ B+ Tree leaf nodes are linked. A range scan reads consecutive pages — perfect 
 
 ---
 
-## Where lsm-kv Sits on the Spectrum
+## Where kiwi-db Sits on the Spectrum
 
-lsm-kv is designed for **write-heavy workloads with point reads** — the sweet spot for LSM Trees. Its specific optimizations push further toward write performance:
+kiwi-db is designed for **write-heavy workloads with point reads** — the sweet spot for LSM Trees. Its specific optimizations push further toward write performance:
 
 | Feature | Effect |
 |---------|--------|
